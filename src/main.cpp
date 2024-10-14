@@ -15,23 +15,14 @@ void forward(void);
 void brake(void);
 
 void setup() {
-  // put your setup code here, to run once:
   Serial.begin(115200);
-  //Dabble.begin("ESP32_Bram");
+  Dabble.begin("ESP32_Bram");
 
   ledcAttachPin(motorL_FWD, 0);
   ledcSetup(0, motorPWMfreq, motorPWMres);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  /*
-  Dabble.processInput();
-  
-  if(GamePad.isCirclePressed()){
-    forward();
-  }
-  */
   ledcWrite(motorL_FWD, 100);
   Serial.println("Test");
 }
