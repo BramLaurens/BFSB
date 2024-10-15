@@ -48,22 +48,6 @@ void setup(){
 }
 
 void loop() {
-  Dabble.processInput();
-  pad_xAxis = GamePad.getXaxisData();
-
-  Serial.print(GamePad.isCirclePressed());
-  Serial.print("  ");
-  Serial.println(GamePad.getXaxisData());
-
-  
-  if(GamePad.isCirclePressed()){
-    motorSpeedcontrol(pad_xAxis);
-  }
-  else{
-    brake();
-  }
-
-  delay(100);
   
 
 }
