@@ -3,49 +3,53 @@
 
 // put function declarations here:
 
-#define motorL_FWD 16
+#define motorL_FWD 4
 #define motorL_REV 0
 #define motorR_FWD 2
 #define motorR_REV 15
 
+#define ch_motorL_FWD 0
+#define ch_motorL_REV 1
+#define ch_motorR_FWD 2
+#define ch_motorR_REV 3
+
 #define motorPWMres 8
 #define motorPWMfreq 200
 
-void forward(void);
-void brake(void);
-
 void setup() {
-  // put your setup code here, to run once:
+  digitalWrite(ch_motorL_REV, LOW);
+  digitalWrite(ch_motorR_REV, LOW);
+  digitalWrite(ch_motorL_FWD, LOW);
+  digitalWrite(ch_motorR_FWD, LOW);
+
   Serial.begin(115200);
-  //Dabble.begin("ESP32_Bram");
 
   ledcAttachPin(motorL_FWD, 0);
+  ledcAttachPin(motorL_REV, 1);
+  ledcAttachPin(motorR_FWD, 2);
+  ledcAttachPin(motorR_REV, 3);
+
   ledcSetup(0, motorPWMfreq, motorPWMres);
+  ledcSetup(1, motorPWMfreq, motorPWMres);
+  ledcSetup(2, motorPWMfreq, motorPWMres);
+  ledcSetup(3, motorPWMfreq, motorPWMres);
 }
 
 void loop() {
-  // put your main code here, to run repeatedly:
-  /*
-  Dabble.processInput();
-  
-  if(GamePad.isCirclePressed()){
-    forward();
-  }
-  */
-  ledcWrite(motorL_FWD, 100);
-  Serial.println("Test");
+  ledcWrite(ch_motorL_FWD, 100);
+  digitalWrite(ch_motorL_REV, LOW);
+  ledcWrite(ch_motorR_FWD, 100);
+  digitalWrite(ch_motorR_REV, LOW);
+  delay(500);
+  ledcWrite(ch_motorL_FWD, 0);
+  digitalWrite(ch_motorL_REV, LOW);
+  ledcWrite(ch_motorR_FWD, 0);
+  digitalWrite(ch_motorR_REV, LOW);
+  delay(500);
+  ledcWrite(ch_motorL_FWD, 100);
+  digitalWrite(ch_motorL_REV, HIGH);
+  ledcWrite(ch_motorR_FWD, 100);
+  digitalWrite(ch_motorR_REV, HIGH);
+  delay(500);
 }
 
-void forward(void){
-  analogWrite(motorL_FWD, 100);
-  digitalWrite(motorL_REV, LOW);
-  analogWrite(motorR_FWD, 100);
-  digitalWrite(motorR_REV, LOW);
-}
-
-void brake(void){
-  analogWrite(motorL_FWD, 0);
-  digitalWrite(motorL_REV, LOW);
-  analogWrite(motorR_FWD, 0);
-  digitalWrite(motorR_REV, LOW);
-}
