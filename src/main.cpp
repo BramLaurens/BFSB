@@ -17,6 +17,7 @@
 #define motorPWMfreq 200
 
 void forward();
+void brake();
 
 void setup(){
   Serial.begin(115200);
@@ -36,15 +37,16 @@ void setup(){
 void loop() {
   Dabble.processInput();
   if(GamePad.isCirclePressed()){
+    forward();
   }
-  
-  forward();
+  Serial.println(GamePad.isCirclePressed());
+  brake();
 }
 
 void forward(){
-  ledcWrite(ch_motorL_FWD, 50);
+  ledcWrite(ch_motorL_FWD, 100);
   digitalWrite(ch_motorL_REV, LOW);
-  ledcWrite(ch_motorR_FWD, 50);
+  ledcWrite(ch_motorR_FWD, 100);
   digitalWrite(ch_motorR_REV, LOW);
 }
 
