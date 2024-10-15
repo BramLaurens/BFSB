@@ -18,10 +18,23 @@
 
 void forward();
 void brake();
+void motorSpeedcontrol(float padSpeed);
+
+float pad_xAxis = 0;
+
+float speedL = 0;
+float speedR = 0;
+float basespeedL = 50;
+float basespeedR = 50;
 
 void setup(){
+  digitalWrite(ch_motorL_REV, LOW);
+  digitalWrite(ch_motorR_REV, LOW);
+  digitalWrite(ch_motorL_FWD, LOW);
+  digitalWrite(ch_motorR_FWD, LOW);
+
   Serial.begin(115200);
-  Dabble.begin("ESP32_Bram");
+  Dabble.begin("AA_ESP32_Bram");
 
   ledcAttachPin(motorL_FWD, 0);
   ledcAttachPin(motorL_REV, 1);
@@ -36,17 +49,39 @@ void setup(){
 
 void loop() {
   Dabble.processInput();
+  pad_xAxis = GamePad.getXaxisData();
+
+  Serial.print(GamePad.isCirclePressed());
+  Serial.print("  ");
+  Serial.println(GamePad.getXaxisData());
+
+  
   if(GamePad.isCirclePressed()){
-    forward();
+    motorSpeedcontrol(pad_xAxis);
   }
-  Serial.println(GamePad.isCirclePressed());
-  brake();
+  else{
+    brake();
+  }
+
+  delay(100);
+  
+
+}
+
+void motorSpeedcontrol(float padSpeed){
+  speedL = basespeedL + padSpeed;
+  speedR = basespeedR - padSpeed;
+  forward();
+  /*Serial.print(padSpeed);
+  Serial.print("  ");
+  Serial.print(speedL);
+  Serial.println(speedR);*/
 }
 
 void forward(){
-  ledcWrite(ch_motorL_FWD, 100);
+  ledcWrite(ch_motorL_FWD, speedL);
   digitalWrite(ch_motorL_REV, LOW);
-  ledcWrite(ch_motorR_FWD, 100);
+  ledcWrite(ch_motorR_FWD, speedR);
   digitalWrite(ch_motorR_REV, LOW);
 }
 
