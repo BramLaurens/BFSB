@@ -20,6 +20,7 @@ void setup() {
 
   ledcAttachPin(motorL_FWD, 0);
   ledcSetup(0, motorPWMfreq, motorPWMres);
+  //test
 }
 
 void loop() {
