@@ -1,16 +1,26 @@
+/*
+Testprogramma voor de microswitch NO
+Sluit aan op pin 23 en GND met 10K resistor 
+Indrukken = aan
+Anders = uit
+*/
+
 #include <Arduino.h>
 #include <DabbleESP32.h>
 
-// put function declarations here:
-void forward(void);
-void brake(void);
-
 void setup() {
-  Serial.begin(115200);
-  Dabble.begin("ESP32_Bram");
-
+  Serial.begin(9600);
+  Serial.println("Begin");
+  pinMode(23, INPUT_PULLUP);
 }
 
 void loop() {
+  if (digitalRead(23) == 0)
+  {
+    Serial.println("Aan");
+  } else
+  {
+    Serial.println("Uit");
+  }
+  delay(50);
 }
-
