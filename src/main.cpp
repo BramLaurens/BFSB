@@ -2,6 +2,7 @@
 Testcode voor de CNY70 sensor
 VCC = 5V
 Weerstand = 330 ohm
+Inputpin = 34
 */
 
 #include <Arduino.h>
