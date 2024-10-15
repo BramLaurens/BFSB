@@ -94,7 +94,7 @@ void setup(){
     &RemoteXY, 
     new CRemoteXYConnectionServer (
       new CRemoteXYComm_WiFiPoint (
-        "myRemoteXY",       // REMOTEXY_WIFI_SSID
+        "BFSB_ESP32_Bram",       // REMOTEXY_WIFI_SSID
         "12345678"),        // REMOTEXY_WIFI_PASSWORD
       6377                  // REMOTEXY_SERVER_PORT
     )
@@ -120,6 +120,8 @@ void setup(){
 
 void loop() {
   remotexy->handler ();
+
+  pad_xAxis = RemoteXY.joystick_01_x;
 }
 
 void motorSpeedcontrol(float padSpeed){
