@@ -19,13 +19,18 @@ void setup() {
   Dabble.begin("ESP32_Bram");
 
   ledcAttachPin(motorL_FWD, 0);
+  ledcAttachPin(motorL_REV, 1);
+  ledcAttachPin(motorR_FWD, 2);
+  ledcAttachPin(motorR_REV, 3);
+
   ledcSetup(0, motorPWMfreq, motorPWMres);
-  //test
+  ledcSetup(1, motorPWMfreq, motorPWMres);
+  ledcSetup(2, motorPWMfreq, motorPWMres);
+  ledcSetup(3, motorPWMfreq, motorPWMres);
 }
 
 void loop() {
-  ledcWrite(0, 100);
-  Serial.println("Test");
+  forward();
 }
 
 void forward(void){
