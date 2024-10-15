@@ -1,6 +1,8 @@
 #include <Arduino.h>
 #include <DabbleESP32.h>
+#include <WiFi.h>
 #include <RemoteXY.h>
+
 
 /*
    -- BFBS_V1 --
@@ -25,16 +27,6 @@
 
 // you can enable debug logging to Serial at 115200
 //#define REMOTEXY__DEBUGLOG    
-
-// RemoteXY select connection mode and include library 
-#define REMOTEXY_MODE__WIFI_POINT
-
-#include <WiFi.h>
-
-// RemoteXY connection settings 
-#define REMOTEXY_WIFI_SSID "ESP32_Bram"
-#define REMOTEXY_WIFI_PASSWORD "12345678"
-#define REMOTEXY_SERVER_PORT 6377
 
 // RemoteXY GUI configuration  
 #pragma pack(push, 1)  
@@ -62,6 +54,8 @@ struct {
 /////////////////////////////////////////////
 //           END RemoteXY include          //
 /////////////////////////////////////////////
+
+
 
 
 /*Motor declarations*/
@@ -93,7 +87,20 @@ float speedR = 0;
 float basespeedL = 50;
 float basespeedR = 50;
 
+CRemoteXY *remotexy;
+
 void setup(){
+  remotexy = new CRemoteXY (
+    RemoteXY_CONF_PROGMEM, 
+    &RemoteXY, 
+    new CRemoteXYConnectionServer (
+      new CRemoteXYComm_WiFiPoint (
+        "myRemoteXY",       // REMOTEXY_WIFI_SSID
+        "12345678"),        // REMOTEXY_WIFI_PASSWORD
+      6377                  // REMOTEXY_SERVER_PORT
+    )
+  );  
+
   digitalWrite(ch_motorL_REV, LOW);
   digitalWrite(ch_motorR_REV, LOW);
   digitalWrite(ch_motorL_FWD, LOW);
@@ -113,8 +120,7 @@ void setup(){
 }
 
 void loop() {
-  
-
+  remotexy->handler ();
 }
 
 void motorSpeedcontrol(float padSpeed){
