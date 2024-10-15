@@ -3,7 +3,7 @@
 
 // put function declarations here:
 
-#define motorL_FWD 16
+#define motorL_FWD 4
 #define motorL_REV 0
 #define motorR_FWD 2
 #define motorR_REV 15
@@ -23,7 +23,7 @@ void setup() {
 }
 
 void loop() {
-  ledcWrite(motorL_FWD, 100);
+  ledcWrite(0, 100);
   Serial.println("Test");
 }
 
