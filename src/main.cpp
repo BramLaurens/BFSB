@@ -10,7 +10,7 @@ Inputpin = 34
 #define Drempelwaarde 500
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   Serial.println("Begin");
   pinMode(34, INPUT);
 }
