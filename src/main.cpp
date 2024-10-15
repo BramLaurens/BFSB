@@ -69,8 +69,8 @@ void loop() {
 }
 
 void motorSpeedcontrol(float padSpeed){
-  speedL = basespeedL + padSpeed;
-  speedR = basespeedR - padSpeed;
+  speedL = basespeedL + 4*padSpeed;
+  speedR = basespeedR - 4*padSpeed;
   forward();
   /*Serial.print(padSpeed);
   Serial.print("  ");
@@ -79,7 +79,7 @@ void motorSpeedcontrol(float padSpeed){
 }
 
 void forward(){
-  ledcWrite(ch_motorL_FWD, speedL);
+  ledcWrite(ch_motorL_FWD, speedL+15);
   digitalWrite(ch_motorL_REV, LOW);
   ledcWrite(ch_motorR_FWD, speedR);
   digitalWrite(ch_motorR_REV, LOW);
