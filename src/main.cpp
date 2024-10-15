@@ -8,13 +8,17 @@
 #define motorR_FWD 2
 #define motorR_REV 15
 
+#define ch_motorL_FWD 0
+#define ch_motorL_REV 1
+#define ch_motorR_FWD 2
+#define ch_motorR_REV 3
+
 #define motorPWMres 8
 #define motorPWMfreq 200
 
-void forward(void);
-void brake(void);
+void forward();
 
-void setup() {
+void setup(){
   Serial.begin(115200);
   Dabble.begin("ESP32_Bram");
 
@@ -30,19 +34,23 @@ void setup() {
 }
 
 void loop() {
+  Dabble.processInput();
+  if(GamePad.isCirclePressed()){
+  }
+  
   forward();
 }
 
-void forward(void){
-  analogWrite(motorL_FWD, 100);
-  digitalWrite(motorL_REV, LOW);
-  analogWrite(motorR_FWD, 100);
-  digitalWrite(motorR_REV, LOW);
+void forward(){
+  ledcWrite(ch_motorL_FWD, 50);
+  digitalWrite(ch_motorL_REV, LOW);
+  ledcWrite(ch_motorR_FWD, 50);
+  digitalWrite(ch_motorR_REV, LOW);
 }
 
-void brake(void){
-  analogWrite(motorL_FWD, 0);
-  digitalWrite(motorL_REV, LOW);
-  analogWrite(motorR_FWD, 0);
-  digitalWrite(motorR_REV, LOW);
+void brake(){
+  ledcWrite(ch_motorL_FWD, 0);
+  digitalWrite(ch_motorL_REV, LOW);
+  ledcWrite(ch_motorR_FWD, 0);
+  digitalWrite(ch_motorR_REV, LOW);
 }
