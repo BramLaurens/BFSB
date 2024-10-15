@@ -7,6 +7,7 @@ Weerstand = 330 ohm
 #include <Arduino.h>
 #include <DabbleESP32.h>
 #define Drempelwaarde 500
+//Test
 
 void setup() {
   Serial.begin(9600);
