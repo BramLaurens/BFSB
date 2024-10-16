@@ -67,14 +67,14 @@ void motorSpeedcontrolREV(float padSpeed);
 
 float pad_xAxis = 0;
 float padxSpeed = 0;
-float padFactor = 0.1;
+float padFactor = 0.8;
 
 float speedL = 0;
 float speedR = 0;
-float basespeedL = 50;
-float basespeedR = 50;
+float basespeedL = 150;
+float basespeedR = 150;
 
-int motorLoffset = 15;
+int motorLoffset = 30;
 int motorRoffset = 0;
 
 CRemoteXY *remotexy;
@@ -143,7 +143,7 @@ void motorSpeedcontrolREV(float padSpeed){
 void forward(){
   ledcWrite(ch_motorL_FWD, speedL+motorLoffset);
   digitalWrite(ch_motorL_REV, LOW);
-  ledcWrite(ch_motorR_FWD, speedR);
+  ledcWrite(ch_motorR_FWD, speedR+motorRoffset);
   digitalWrite(ch_motorR_REV, LOW);
 }
 
