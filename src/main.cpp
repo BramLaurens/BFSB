@@ -2,24 +2,6 @@
 #include <WiFi.h>
 #include <RemoteXY.h>
 
-
-/*
-   -- BFBS_V1 --
-   
-   This part of the source code of the graphical user interface 
-   has been generated automatically by RemoteXY editor.
-   To compile this code using RemoteXY library 3.1.13 or later version 
-   download by link http://remotexy.com/en/library/
-   To connect using RemoteXY mobile app by link http://remotexy.com/en/download/                   
-     - for ANDROID 4.15.01 or later version;
-     - for iOS 1.12.1 or later version;
-    
-   This source code is free software; you can redistribute it and/or
-   modify it under the terms of the GNU Lesser General Public
-   License as published by the Free Software Foundation; either
-   version 2.1 of the License, or (at your option) any later version.    
-*/
-
 //////////////////////////////////////////////
 //        RemoteXY include library          //
 //////////////////////////////////////////////
@@ -36,7 +18,7 @@ uint8_t RemoteXY_CONF[] =   // 84 bytes
   7,60,60,0,2,26,31,1,37,72,57,57,118,27,24,24,1,37,31,66,
   79,78,75,0 };
   
-// this structure defines all the variables and events of your control interface 
+// this structure defines all the variables and events of the control interface 
 struct {
 
     // input variables
@@ -89,6 +71,9 @@ float speedL = 0;
 float speedR = 0;
 float basespeedL = 50;
 float basespeedR = 50;
+
+int motorLoffset = 15;
+int motorRoffset = 0;
 
 CRemoteXY *remotexy;
 
@@ -147,7 +132,7 @@ void motorSpeedcontrol(float padSpeed){
 }
 
 void forward(){
-  ledcWrite(ch_motorL_FWD, speedL);
+  ledcWrite(ch_motorL_FWD, speedL+motorLoffset);
   digitalWrite(ch_motorL_REV, LOW);
   ledcWrite(ch_motorR_FWD, speedR);
   digitalWrite(ch_motorR_REV, LOW);
