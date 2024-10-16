@@ -142,9 +142,9 @@ void motorSpeedcontrolREV(float padSpeed){
 
 void forward(){
   ledcWrite(ch_motorL_FWD, speedL+motorLoffset);
-  digitalWrite(ch_motorL_REV, LOW);
+  digitalWrite(motorL_REV, LOW);
   ledcWrite(ch_motorR_FWD, speedR+motorRoffset);
-  digitalWrite(ch_motorR_REV, LOW);
+  digitalWrite(motorR_REV, LOW);
 }
 
 void brake(){
@@ -155,8 +155,8 @@ void brake(){
 }
 
 void reverse(){
-  digitalWrite(ch_motorL_FWD, LOW);
-  digitalWrite(ch_motorR_REV, LOW);
+  digitalWrite(motorL_FWD, LOW);
+  digitalWrite(motorR_FWD, LOW);
   ledcWrite(ch_motorL_REV, speedL + motorLoffset);
   ledcWrite(ch_motorR_REV, speedR + motorRoffset);
 }
