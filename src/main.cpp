@@ -59,7 +59,9 @@ struct {
 
 void forward();
 void brake();
-void motorSpeedcontrol(float padSpeed);
+void reverse();
+void motorSpeedcontrolFWD(float padSpeed);
+void motorSpeedcontrolREV(float padSpeed);
 
 /*Variables inits*/
 
@@ -114,21 +116,28 @@ void loop() {
   padxSpeed = pad_xAxis * padFactor;
 
   if(RemoteXY.button_01 == 1){
-    motorSpeedcontrol(padxSpeed);
+    motorSpeedcontrolFWD(padxSpeed);
   }
   else{
-    brake();
+    if(RemoteXY.button_02 == 1){
+      motorSpeedcontrolREV(padxSpeed);
+    }
+    else{
+      brake();
+    }
   }
 }
 
-void motorSpeedcontrol(float padSpeed){
+void motorSpeedcontrolFWD(float padSpeed){
   speedL = basespeedL + padSpeed;
   speedR = basespeedR - padSpeed;
   forward();
-  /*Serial.print(padSpeed);
-  Serial.print("  ");
-  Serial.print(speedL);
-  Serial.println(speedR);*/
+}
+
+void motorSpeedcontrolREV(float padSpeed){
+  speedL = basespeedL + padSpeed;
+  speedR = basespeedR - padSpeed;
+  reverse();
 }
 
 void forward(){
@@ -140,7 +149,14 @@ void forward(){
 
 void brake(){
   ledcWrite(ch_motorL_FWD, 0);
-  digitalWrite(ch_motorL_REV, LOW);
+  ledcWrite(ch_motorL_REV, 0);
   ledcWrite(ch_motorR_FWD, 0);
+  ledcWrite(ch_motorR_REV, 0);
+}
+
+void reverse(){
+  digitalWrite(ch_motorL_FWD, LOW);
   digitalWrite(ch_motorR_REV, LOW);
+  ledcWrite(ch_motorL_REV, speedL + motorLoffset);
+  ledcWrite(ch_motorR_REV, speedR + motorRoffset);
 }
