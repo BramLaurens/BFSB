@@ -40,16 +40,19 @@ void loop() {
   digitalWrite(ch_motorL_REV, LOW);
   ledcWrite(ch_motorR_FWD, 100);
   digitalWrite(ch_motorR_REV, LOW);
+  Serial.println("Voor");
   delay(500);
   ledcWrite(ch_motorL_FWD, 0);
   digitalWrite(ch_motorL_REV, LOW);
   ledcWrite(ch_motorR_FWD, 0);
   digitalWrite(ch_motorR_REV, LOW);
+  Serial.println("Stop");
   delay(500);
   ledcWrite(ch_motorL_FWD, 100);
   digitalWrite(ch_motorL_REV, HIGH);
   ledcWrite(ch_motorR_FWD, 100);
   digitalWrite(ch_motorR_REV, HIGH);
+  Serial.println("Achter");
   delay(500);
 }
 
