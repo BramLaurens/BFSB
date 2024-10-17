@@ -1,8 +1,22 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <RemoteXY.h>
+#include <Wire.h>
+#include <Adafruit_GFX.h>
+#include <Adafruit_SSD1306.h>
 
 TaskHandle_t Task1;
+
+////////////////////////////Display LIB/////////////////////////////////
+void Display(int InvoerDisplay);
+
+#define SCREEN_WIDTH 128 // OLED display width, in pixels
+#define SCREEN_HEIGHT 64 // OLED display height, in pixels
+// #define BLUE 0x03
+
+// Declaration for an SSD1306 display connected to I2C (SDA, SCL pins)
+Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
+//////////////////////////////////////////////////////////////////////
 
 //////////////////////////////////////////////
 //        RemoteXY include library          //
@@ -94,6 +108,13 @@ void setup(){
     )
   );
 
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);
+  }
+  delay(2000);
+  display.clearDisplay();
+
   digitalWrite(ch_motorL_REV, LOW);
   digitalWrite(ch_motorR_REV, LOW);
   digitalWrite(ch_motorL_FWD, LOW);
@@ -137,8 +158,7 @@ void Task1code(void *pvParameters){
 }
 
 void loop() {
-  //Serial.print("loop() running on core ");
-  //Serial.println(xPortGetCoreID());
+  Display(60); 
 
   pad_xAxis = RemoteXY.joystick_01_x;
   padxSpeed = pad_xAxis * padFactor;
@@ -187,4 +207,15 @@ void reverse(){
   digitalWrite(motorR_FWD, LOW);
   ledcWrite(ch_motorL_REV, speedL + motorLoffset);
   ledcWrite(ch_motorR_REV, speedR + motorRoffset);
+}
+
+void Display(int InvoerDisplay) {
+  //display.setRotation(1); //Voer een waarde tussen 1 en 3 in of comment deze line; 1 draait het beeld met 90 graden, 2 draait het beeld met 180 graden, 3 draait het beeld 
+  display.setTextSize(5);
+  //Grootte tekst in pixels (max 6)
+  display.setTextColor(WHITE);//De kleur kan je als het goed is niet veranderen
+  display.setCursor(50, 30); // int x, int y; waardes om in te stellen hoe ver opzij of hoe hoog de invoer wordt uitgebeeld. (Hoe hoger de y, en hoe hoger de x, )
+  // Display static text
+  display.println(InvoerDisplay); //invoer wat wordt uitgebeeld op display
+  display.display(); 
 }
