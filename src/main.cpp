@@ -211,6 +211,10 @@ void motorSpeedcontrolREV(float padSpeed){
 
 void forward(){
   motorSpeedlimiter();
+  
+  Serial.print(speedL);
+  Serial.print("  ");
+  Serial.println(speedR);
   ledcWrite(ch_motorL_FWD, speedL+motorLoffset);
   digitalWrite(motorL_REV, LOW);
   ledcWrite(ch_motorR_FWD, speedR+motorRoffset);
