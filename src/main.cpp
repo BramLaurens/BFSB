@@ -79,6 +79,8 @@ void reverse();
 void motorSpeedcontrolFWD(float padSpeed);
 void motorSpeedcontrolREV(float padSpeed);
 void Task1code(void * pvParameters);
+void motorSpeedlimiter();
+void remoteMotorcontrol();
 
 /*Variables inits*/
 
@@ -90,6 +92,8 @@ float speedL = 0;
 float speedR = 0;
 float basespeedL = 150;
 float basespeedR = 150;
+int maxSpeedL = 255;
+int maxSpeedR = 255;
 
 int motorLoffset = 30;
 int motorRoffset = 0;
@@ -158,8 +162,10 @@ void Task1code(void *pvParameters){
 }
 
 void loop() {
-  Display(60); 
+  remoteMotorcontrol();
+}
 
+void remoteMotorcontrol(){
   pad_xAxis = RemoteXY.joystick_01_x;
   padxSpeed = pad_xAxis * padFactor;
 
@@ -176,6 +182,21 @@ void loop() {
   }
 }
 
+void motorSpeedlimiter(){
+  if(speedL > maxSpeedL){
+    speedL = maxSpeedL;
+  }
+  if(speedR > maxSpeedR){
+    speedR = maxSpeedR;
+  }
+  if(speedL < 0){
+    speedL = 0;
+  }
+  if(speedR < 0){
+    speedR = 0;
+  }
+}
+
 void motorSpeedcontrolFWD(float padSpeed){
   speedL = basespeedL + padSpeed;
   speedR = basespeedR - padSpeed;
@@ -189,6 +210,7 @@ void motorSpeedcontrolREV(float padSpeed){
 }
 
 void forward(){
+  motorSpeedlimiter();
   ledcWrite(ch_motorL_FWD, speedL+motorLoffset);
   digitalWrite(motorL_REV, LOW);
   ledcWrite(ch_motorR_FWD, speedR+motorRoffset);
@@ -203,6 +225,7 @@ void brake(){
 }
 
 void reverse(){
+  motorSpeedlimiter();
   digitalWrite(motorL_FWD, LOW);
   digitalWrite(motorR_FWD, LOW);
   ledcWrite(ch_motorL_REV, speedL + motorLoffset);
