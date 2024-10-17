@@ -2,6 +2,8 @@
 #include <WiFi.h>
 #include <RemoteXY.h>
 
+TaskHandle_t Task1;
+
 //////////////////////////////////////////////
 //        RemoteXY include library          //
 //////////////////////////////////////////////
@@ -62,6 +64,7 @@ void brake();
 void reverse();
 void motorSpeedcontrolFWD(float padSpeed);
 void motorSpeedcontrolREV(float padSpeed);
+void Task1code(void * pvParameters);
 
 /*Variables inits*/
 
@@ -89,7 +92,7 @@ void setup(){
         "12345678"),        // REMOTEXY_WIFI_PASSWORD
       6377                  // REMOTEXY_SERVER_PORT
     )
-  );  
+  );
 
   digitalWrite(ch_motorL_REV, LOW);
   digitalWrite(ch_motorR_REV, LOW);
@@ -107,10 +110,35 @@ void setup(){
   ledcSetup(1, motorPWMfreq, motorPWMres);
   ledcSetup(2, motorPWMfreq, motorPWMres);
   ledcSetup(3, motorPWMfreq, motorPWMres);
+
+  xTaskCreatePinnedToCore(
+    Task1code,
+    "Task1",
+    10000,
+    NULL,
+    1,
+    &Task1,
+    0
+  );
+
+  Serial.print("setup() running on core ");
+  Serial.println(xPortGetCoreID());  
+}
+
+void Task1code(void *pvParameters){
+  
+
+  for(;;){
+    Serial.print("RemoteXY handler running on core ");
+    Serial.println(xPortGetCoreID());
+
+    remotexy->handler ();
+  } 
 }
 
 void loop() {
-  remotexy->handler ();
+  //Serial.print("loop() running on core ");
+  //Serial.println(xPortGetCoreID());
 
   pad_xAxis = RemoteXY.joystick_01_x;
   padxSpeed = pad_xAxis * padFactor;
