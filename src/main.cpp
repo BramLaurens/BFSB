@@ -232,7 +232,7 @@ void  Ultrasoonsensor(){
   pinMode(23, OUTPUT);
   pinMode(22, INPUT);
   Serial.println("\n\nTesting ultrasoon sensor:\n");
-  Serial.println("Stap 1: \nSluit de Vcc aan op 5V en sluit de GND aan\n");
+  Serial.println("Stap 1: \nSluit de Vcc aan op 3.3V en sluit de GND aan\n");
   Serial.println("Stap 2: \nSluit de Trig_RX aan op pin 23\n");
   Serial.println("Stap 3: \nSluit de Echo_TX aan op pin 22\n");
   Serial.println("Stap 4: \nAls je alles hebt aangesloten mag je de test beginnen\n");
