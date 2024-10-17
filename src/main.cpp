@@ -4,12 +4,19 @@ unsigned long huidigetijd = 0;
 unsigned long vorigeTijd = 0;
 int fakedelay = 0;
 int drempelwaarde = 1000;
-const int trigPin = 23;
-const int echoPin = 22;
+const int trigPin = 13;
+const int echoPin = 12;
 unsigned long duration;
 unsigned long distance;
 int telop = 0;
+int hamerTimeout = 1000;
+int hammerTime = 0;
+int hammerTimeDifference = 0;
 void leeshamer();
+void tel();
+
+
+
 
 // put function declarations here:
 
@@ -26,16 +33,19 @@ void setup() {
 void loop() {
   leeshamer();
   delay(10);
-  Serial.println(distance);
+  Serial.print("Distance: ");
+  Serial.print(distance);
+  Serial.print("  Score: ");
+  Serial.println(telop);
   // Serial.println("\t");
-  if(distance <= 5 && distance >= 4 ){
+
+  hammerTimeDifference = millis() - hammerTime;
+
+  if((distance <= 5) && (distance >= 1) && hammerTimeDifference > hamerTimeout){
     telop = telop -3;
-    Serial.println(telop, DEC);
-    delay(1000);
+    hammerTime = millis();
   }
-  // else{
-  // Serial.println(distance);
-  // }
+
 }
 
 
@@ -45,20 +55,19 @@ void leeshamer(){
     vorigeTijd = huidigetijd;
     fakedelay = fakedelay +1;
 
-  switch (fakedelay) {
-  case 1:
-  digitalWrite(trigPin, LOW);
-  break;
-  case 3:
-  digitalWrite(trigPin, HIGH);
-  break;
-  case 14:
-  digitalWrite(trigPin, LOW);
-  duration = pulseInLong(echoPin, HIGH);
-  distance = duration * 0.034 / 2;
-  fakedelay = 0;
-  break;
+    switch (fakedelay) {
+      case 1:
+      digitalWrite(trigPin, LOW);
+      break;
+      case 3:
+      digitalWrite(trigPin, HIGH);
+      break;
+      case 14:
+      digitalWrite(trigPin, LOW);
+      duration = pulseInLong(echoPin, HIGH);
+      distance = duration * 0.034 / 2;
+      fakedelay = 0;
+      break;
+    }
   }
-  }
-
 }
