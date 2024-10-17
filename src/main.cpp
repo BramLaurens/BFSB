@@ -129,9 +129,9 @@ void Task1code(void *pvParameters){
   
 
   for(;;){
-    Serial.print("RemoteXY handler running on core ");
-    Serial.println(xPortGetCoreID());
-
+    //Serial.print("RemoteXY handler running on core ");
+    //Serial.println(xPortGetCoreID());
+    RemoteXY_delay(1);          
     remotexy->handler ();
   } 
 }
