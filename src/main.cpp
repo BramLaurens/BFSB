@@ -72,6 +72,7 @@ struct {
 
 
 /*Servo declarations*/
+#define Servo_Pin 32
 #define Servo_Max_Degrees 90
 #define Servo_Min_Degrees 0
 #define Servo_Lowtime 1000
@@ -79,7 +80,7 @@ struct {
 Servo myservo;
 
 
-/*Servo declarations*/
+/*Microssitch declarations*/
 #define Microswitch_Pin 23
 #define Microswitch_Timeout 1500
 
@@ -102,6 +103,7 @@ void motorSpeedlimiter();
 void remoteMotorcontrol();
 void microswitch();
 bool CNY70();
+void ultrasoon();
 
 /*Motor Variables*/
 float pad_xAxis = 0;
@@ -125,6 +127,13 @@ int Servo_Timer = 0;
 
 /*Microswitch Variables*/
 int Microswitch_Timer = 0;
+
+
+/*Ultrasoon Variables*/
+int Ultrasoon_Timer = 0;
+int duration_us = 0;
+int distance_cm = 0;
+bool Ultrasoon_Timer_Toggle = true;
 
 
 int Score = 0;
@@ -189,7 +198,7 @@ void setup(){
   //Servo
   ESP32PWM::allocateTimer(3);
   myservo.setPeriodHertz(50); 
-	myservo.attach(4, 500, 2500); 
+	myservo.attach(Servo_Pin, 500, 2500); 
   myservo.write(Servo_Min_Degrees);
 
   Serial.print("setup() running on core ");
@@ -212,11 +221,12 @@ void Task1code(void *pvParameters){
 }
 
 void loop() {
+  ultrasoon();
   remoteMotorcontrol();
   servo();
   microswitch();
   Display(Score);
-  
+
   // if (CNY70 == true){
   //   ledcWrite(ch_motorL_FWD, 100);
   //   digitalWrite(motorL_REV, LOW);
@@ -341,4 +351,36 @@ bool CNY70(){
     Serial.println("Wit");
     return(true);
   }
+}
+
+void ultrasoon(){
+  if (millis() - Ultrasoon_Timer > 500 && Ultrasoon_Timer_Toggle == true){
+  pinMode(26, OUTPUT);
+  pinMode(27, INPUT);
+
+  digitalWrite(26, HIGH);
+  delayMicroseconds(10);
+  digitalWrite(26, LOW);
+
+  duration_us = pulseIn(27, HIGH);
+  distance_cm = 0.017 * duration_us;
+
+  // Serial.print("distance: ");
+  // Serial.print(distance_cm);
+  // Serial.println(" cm");
+  
+  Ultrasoon_Timer = millis();
+  }
+
+  if (distance_cm < 10){
+    Score = Score - 3;
+    Serial.println(Score);
+    distance_cm = 10;
+    Ultrasoon_Timer_Toggle = false;
+  }
+
+  if (Ultrasoon_Timer_Toggle == false && millis() - Ultrasoon_Timer > 4000){
+    Ultrasoon_Timer_Toggle = true;
+  }
+  
 }
