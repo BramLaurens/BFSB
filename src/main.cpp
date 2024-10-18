@@ -95,7 +95,7 @@ float basespeedR = 150;
 int maxSpeedL = 255;
 int maxSpeedR = 255;
 
-int motorLoffset = 30;
+int motorLoffset = 0;
 int motorRoffset = 0;
 
 CRemoteXY *remotexy;
@@ -235,8 +235,8 @@ void reverse(){
   motorSpeedlimiter();
   digitalWrite(motorL_FWD, LOW);
   digitalWrite(motorR_FWD, LOW);
-  ledcWrite(ch_motorL_REV, speedL + motorLoffset);
-  ledcWrite(ch_motorR_REV, speedR + motorRoffset);
+  ledcWrite(ch_motorL_REV, speedL);
+  ledcWrite(ch_motorR_REV, speedR);
 }
 
 void Display(int InvoerDisplay) {
