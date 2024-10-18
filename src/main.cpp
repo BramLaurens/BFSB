@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <WiFi.h>
 #include <RemoteXY.h>
+#include <ESP32Servo.h>
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
@@ -55,8 +56,6 @@ struct {
 /////////////////////////////////////////////
 
 
-
-
 /*Motor declarations*/
 #define motorL_FWD 4
 #define motorL_REV 0
@@ -71,19 +70,40 @@ struct {
 #define motorPWMres 8
 #define motorPWMfreq 200
 
-/*Function prototypes*/
 
+/*Servo declarations*/
+#define Servo_Max_Degrees 90
+#define Servo_Min_Degrees 0
+#define Servo_Lowtime 1000
+#define Servo_Timeout 5000
+Servo myservo;
+
+
+/*Servo declarations*/
+#define Microswitch_Pin 23
+#define Microswitch_Timeout 1500
+
+
+/*CNY70 declarations*/
+#define Drempelwaarde_CNY70 2000
+#define CNY70_pin 34
+
+
+/*Function prototypes*/
 void forward();
 void brake();
 void reverse();
+void servo();
+void Display(int InvoerDisplay);
 void motorSpeedcontrolFWD(float padSpeed);
 void motorSpeedcontrolREV(float padSpeed);
 void Task1code(void * pvParameters);
 void motorSpeedlimiter();
 void remoteMotorcontrol();
+void microswitch();
+bool CNY70();
 
-/*Variables inits*/
-
+/*Motor Variables*/
 float pad_xAxis = 0;
 float padxSpeed = 0;
 float padFactor = 0.8;
@@ -98,46 +118,33 @@ int maxSpeedR = 255;
 int motorLoffset = 30;
 int motorRoffset = 0;
 
+
+/*Servo Variables*/
+int Servo_Timer = 0;
+
+
+/*Microswitch Variables*/
+int Microswitch_Timer = 0;
+
+
+int Score = 0;
+
 CRemoteXY *remotexy;
 
 void setup(){
+  Serial.begin(115200);
+
+  //Wifi
   remotexy = new CRemoteXY (
     RemoteXY_CONF_PROGMEM, 
     &RemoteXY, 
     new CRemoteXYConnectionServer (
       new CRemoteXYComm_WiFiPoint (
-        "BFSB_ESP32_Bram",       // REMOTEXY_WIFI_SSID
+        "BFSB_ESP32_Matthias",       // REMOTEXY_WIFI_SSID
         "12345678"),        // REMOTEXY_WIFI_PASSWORD
       6377                  // REMOTEXY_SERVER_PORT
     )
   );
-
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
-    Serial.println(F("SSD1306 allocation failed"));
-    for(;;);
-  }
-  delay(2000);
-  display.clearDisplay();
-  //display.setRotation(1); //Voer een waarde tussen 1 en 3 in of comment deze line; 1 draait het beeld met 90 graden, 2 draait het beeld met 180 graden, 3 draait het beeld met 270 graden
-  display.setTextSize(9);
-  display.setTextColor(WHITE);//De kleur kan je als het goed is niet veranderen
-
-  digitalWrite(ch_motorL_REV, LOW);
-  digitalWrite(ch_motorR_REV, LOW);
-  digitalWrite(ch_motorL_FWD, LOW);
-  digitalWrite(ch_motorR_FWD, LOW);
-
-  Serial.begin(115200);
-
-  ledcAttachPin(motorL_FWD, 0);
-  ledcAttachPin(motorL_REV, 1);
-  ledcAttachPin(motorR_FWD, 2);
-  ledcAttachPin(motorR_REV, 3);
-
-  ledcSetup(0, motorPWMfreq, motorPWMres);
-  ledcSetup(1, motorPWMfreq, motorPWMres);
-  ledcSetup(2, motorPWMfreq, motorPWMres);
-  ledcSetup(3, motorPWMfreq, motorPWMres);
 
   xTaskCreatePinnedToCore(
     Task1code,
@@ -149,13 +156,53 @@ void setup(){
     0
   );
 
+
+  //Display
+  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
+    Serial.println(F("SSD1306 allocation failed"));
+    for(;;);
+  }
+  delay(2000);
+  display.clearDisplay();
+  //display.setRotation(1); //Voer een waarde tussen 1 en 3 in of comment deze line; 1 draait het beeld met 90 graden, 2 draait het beeld met 180 graden, 3 draait het beeld met 270 graden
+  display.setTextSize(9);
+  display.setTextColor(WHITE);//De kleur kan je als het goed is niet veranderen
+
+
+  //Motor
+  digitalWrite(ch_motorL_REV, LOW);
+  digitalWrite(ch_motorR_REV, LOW);
+  digitalWrite(ch_motorL_FWD, LOW);
+  digitalWrite(ch_motorR_FWD, LOW);
+
+  ledcAttachPin(motorL_FWD, 0);
+  ledcAttachPin(motorL_REV, 1);
+  ledcAttachPin(motorR_FWD, 2);
+  ledcAttachPin(motorR_REV, 3);
+
+  ledcSetup(0, motorPWMfreq, motorPWMres);
+  ledcSetup(1, motorPWMfreq, motorPWMres);
+  ledcSetup(2, motorPWMfreq, motorPWMres);
+  ledcSetup(3, motorPWMfreq, motorPWMres);
+
+  
+  //Servo
+  ESP32PWM::allocateTimer(3);
+  myservo.setPeriodHertz(50); 
+	myservo.attach(4, 500, 2500); 
+  myservo.write(Servo_Min_Degrees);
+
   Serial.print("setup() running on core ");
   Serial.println(xPortGetCoreID());  
+
+  //Microswitch
+  pinMode(Microswitch_Pin, INPUT_PULLUP);  
+
+  //CNY70
+  pinMode(CNY70_pin, INPUT);
 }
 
 void Task1code(void *pvParameters){
-  
-
   for(;;){
     //Serial.print("RemoteXY handler running on core ");
     //Serial.println(xPortGetCoreID());
@@ -166,6 +213,22 @@ void Task1code(void *pvParameters){
 
 void loop() {
   remoteMotorcontrol();
+  servo();
+  microswitch();
+  Display(Score);
+  
+  // if (CNY70 == true){
+  //   ledcWrite(ch_motorL_FWD, 100);
+  //   digitalWrite(motorL_REV, LOW);
+  //   ledcWrite(ch_motorR_REV, 100)
+  //   digitalWrite(motorR_FWD, LOW);
+  //   delay(100);
+  //   ledcWrite(ch_motorL_FWD, 100);
+  //   digitalWrite(motorL_REV, LOW);
+  //   ledcWrite(ch_motorR_FWD, 100);
+  //   digitalWrite(motorR_REV, LOW);
+  //   delay(500);
+  // }
 }
 
 void remoteMotorcontrol(){
@@ -247,4 +310,35 @@ void Display(int InvoerDisplay) {
   }
   display.println(InvoerDisplay); //invoer wat wordt uitgebeeld op display
   display.display(); 
+}
+
+void servo(){
+  if (RemoteXY.button_03 == 1 && millis() - Servo_Timer > Servo_Timeout){
+    myservo.write(Servo_Max_Degrees);
+    // Serial.println("Pressed");
+    Servo_Timer = millis();
+  } else if (millis() - Servo_Timer > Servo_Lowtime){
+    myservo.write(Servo_Min_Degrees);
+    // Serial.println("Not pressed");
+  }
+}
+
+void microswitch(){
+  if (digitalRead(Microswitch_Pin) == LOW && (millis() - Microswitch_Timer) > Microswitch_Timeout){
+    Score++;
+    Serial.println(Score);
+    Microswitch_Timer = millis();
+  } 
+}
+
+bool CNY70(){
+  if (analogRead(CNY70_pin) >= Drempelwaarde_CNY70){
+    return(false);
+    // Serial.println("Zwart");
+  }
+
+  if (analogRead(CNY70_pin) <= Drempelwaarde_CNY70){
+    Serial.println("Wit");
+    return(true);
+  }
 }
