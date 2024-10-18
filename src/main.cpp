@@ -185,6 +185,18 @@ void remoteMotorcontrol(){
   }
 }
 
+void motorSpeedcontrolFWD(float padSpeed){
+  speedL = basespeedL + motorLoffset + padSpeed;
+  speedR = basespeedR + motorRoffset - padSpeed;
+  forward();
+}
+
+void motorSpeedcontrolREV(float padSpeed){
+  speedL = basespeedL + motorLoffset + padSpeed;
+  speedR = basespeedR + motorRoffset - padSpeed;
+  reverse();
+}
+
 void motorSpeedlimiter(){
   if(speedL > maxSpeedL){
     speedL = maxSpeedL;
@@ -200,27 +212,15 @@ void motorSpeedlimiter(){
   }
 }
 
-void motorSpeedcontrolFWD(float padSpeed){
-  speedL = basespeedL + padSpeed;
-  speedR = basespeedR - padSpeed;
-  forward();
-}
-
-void motorSpeedcontrolREV(float padSpeed){
-  speedL = basespeedL + padSpeed;
-  speedR = basespeedR - padSpeed;
-  reverse();
-}
-
 void forward(){
   motorSpeedlimiter();
   
   Serial.print(speedL);
   Serial.print("  ");
   Serial.println(speedR);
-  ledcWrite(ch_motorL_FWD, speedL+motorLoffset);
+  ledcWrite(ch_motorL_FWD, speedL);
   digitalWrite(motorL_REV, LOW);
-  ledcWrite(ch_motorR_FWD, speedR+motorRoffset);
+  ledcWrite(ch_motorR_FWD, speedR);
   digitalWrite(motorR_REV, LOW);
 }
 
