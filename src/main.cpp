@@ -151,9 +151,7 @@ unsigned long Microswitch_Timer = 0;
 /*Ultrasoon Variables*/
 unsigned long Ultrasoon_Timer = 0;
 unsigned int Strafpunt_Timer = 0;
-int duration_us = 0;
 int distance_cm = 0;
-bool Ultrasoon_Timer_Toggle = true;
 
 
 int Score = 0;
@@ -382,7 +380,7 @@ bool CNY70(){
   }
 
   if (analogRead(CNY70_Pin) <= Drempelwaarde_CNY70){
-    Serial.println("Wit");
+    // Serial.println("Wit");
     return(true);
   }
 }
@@ -400,6 +398,4 @@ void ultrasoon(){
     distance_cm = Strafpunt_Drempelwaarde_cm;
     Strafpunt_Timer = millis();
   }
-
-  
 }
