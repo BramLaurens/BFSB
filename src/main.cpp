@@ -337,7 +337,7 @@ void reverse(){
 void Display(int InvoerDisplay) {
   display.clearDisplay();
   if (InvoerDisplay >= 10 || InvoerDisplay < 0){
-    display.setCursor(10, 0);
+    display.setCursor(15, 0);
     display.setTextSize(9);
   } 
   else {
