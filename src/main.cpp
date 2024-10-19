@@ -85,9 +85,24 @@ Servo myservo;
 #define Microswitch_Timeout 1500
 
 
+/*Ultrasoon declarations*/
+#define Strafpunt 3
+#define Ultrasoon_Trig_Pin 26
+#define Ultrasoon_Echo_Pin 27
+#define Ultrasoon_Timeout 4000
+#define Ultrasoon_Measure_Delay 100
+#define Strafpunt_Drempelwaarde_cm 7
+
+
 /*CNY70 declarations*/
 #define Drempelwaarde_CNY70 2000
-#define CNY70_pin 34
+#define CNY70_Pin 34
+
+
+/*Display declarations*/
+//Vcc = 5V / 3.3V
+//SDA = pin 21
+//SCL = pin 22
 
 
 /*Function prototypes*/
@@ -122,15 +137,15 @@ int motorRoffset = 0;
 
 
 /*Servo Variables*/
-int Servo_Timer = 0;
+unsigned long Servo_Timer = 0;
 
 
 /*Microswitch Variables*/
-int Microswitch_Timer = 0;
+unsigned long Microswitch_Timer = 0;
 
 
 /*Ultrasoon Variables*/
-int Ultrasoon_Timer = 0;
+unsigned long Ultrasoon_Timer = 0;
 int duration_us = 0;
 int distance_cm = 0;
 bool Ultrasoon_Timer_Toggle = true;
@@ -167,13 +182,9 @@ void setup(){
 
 
   //Display
-  if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3D for 128x64
-    Serial.println(F("SSD1306 allocation failed"));
-    for(;;);
-  }
-  delay(2000);
+  display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.clearDisplay();
-  //display.setRotation(1); //Voer een waarde tussen 1 en 3 in of comment deze line; 1 draait het beeld met 90 graden, 2 draait het beeld met 180 graden, 3 draait het beeld met 270 graden
+  display.setRotation(2); //Voer een waarde tussen 1 en 3 in of comment deze line; 1 draait het beeld met 90 graden, 2 draait het beeld met 180 graden, 3 draait het beeld met 270 graden
   display.setTextSize(9);
   display.setTextColor(WHITE);//De kleur kan je als het goed is niet veranderen
 
@@ -204,11 +215,18 @@ void setup(){
   Serial.print("setup() running on core ");
   Serial.println(xPortGetCoreID());  
 
+
   //Microswitch
   pinMode(Microswitch_Pin, INPUT_PULLUP);  
 
+
   //CNY70
-  pinMode(CNY70_pin, INPUT);
+  pinMode(CNY70_Pin, INPUT);
+
+
+  //Ultrasoon
+  pinMode(Ultrasoon_Trig_Pin, OUTPUT);
+  pinMode(Ultrasoon_Echo_Pin, INPUT);
 }
 
 void Task1code(void *pvParameters){
@@ -313,11 +331,13 @@ void reverse(){
 }
 
 void Display(int InvoerDisplay) {
-  if (InvoerDisplay >= 10){
+  display.clearDisplay();
+  if (InvoerDisplay >= 10 || InvoerDisplay < 0){
     display.setCursor(10, 0);
   } else {
     display.setCursor(40, 0);
   }
+  Serial.println(Score);
   display.println(InvoerDisplay); //invoer wat wordt uitgebeeld op display
   display.display(); 
 }
@@ -336,33 +356,30 @@ void servo(){
 void microswitch(){
   if (digitalRead(Microswitch_Pin) == LOW && (millis() - Microswitch_Timer) > Microswitch_Timeout){
     Score++;
-    Serial.println(Score);
+    // Serial.println(Score);
     Microswitch_Timer = millis();
   } 
 }
 
 bool CNY70(){
-  if (analogRead(CNY70_pin) >= Drempelwaarde_CNY70){
+  if (analogRead(CNY70_Pin) >= Drempelwaarde_CNY70){
     return(false);
     // Serial.println("Zwart");
   }
 
-  if (analogRead(CNY70_pin) <= Drempelwaarde_CNY70){
+  if (analogRead(CNY70_Pin) <= Drempelwaarde_CNY70){
     Serial.println("Wit");
     return(true);
   }
 }
 
 void ultrasoon(){
-  if (millis() - Ultrasoon_Timer > 500 && Ultrasoon_Timer_Toggle == true){
-  pinMode(26, OUTPUT);
-  pinMode(27, INPUT);
-
-  digitalWrite(26, HIGH);
+  if (millis() - Ultrasoon_Timer > Ultrasoon_Measure_Delay && Ultrasoon_Timer_Toggle == true){
+  digitalWrite(Ultrasoon_Trig_Pin, HIGH);
   delayMicroseconds(10);
-  digitalWrite(26, LOW);
+  digitalWrite(Ultrasoon_Trig_Pin, LOW);
 
-  duration_us = pulseIn(27, HIGH);
+  duration_us = pulseIn(Ultrasoon_Echo_Pin, HIGH);
   distance_cm = 0.017 * duration_us;
 
   // Serial.print("distance: ");
@@ -372,14 +389,14 @@ void ultrasoon(){
   Ultrasoon_Timer = millis();
   }
 
-  if (distance_cm < 10){
-    Score = Score - 3;
-    Serial.println(Score);
-    distance_cm = 10;
+  if (distance_cm < Strafpunt_Drempelwaarde_cm && distance_cm != 0){
+    Score = Score - Strafpunt;
+    // Serial.println(Score);
+    distance_cm = Strafpunt_Drempelwaarde_cm;
     Ultrasoon_Timer_Toggle = false;
   }
 
-  if (Ultrasoon_Timer_Toggle == false && millis() - Ultrasoon_Timer > 4000){
+  if (Ultrasoon_Timer_Toggle == false && millis() - Ultrasoon_Timer > Ultrasoon_Timeout){
     Ultrasoon_Timer_Toggle = true;
   }
   
