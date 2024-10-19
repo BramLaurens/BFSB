@@ -191,7 +191,6 @@ void setup(){
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.clearDisplay();
   display.setRotation(2); //Voer een waarde tussen 1 en 3 in of comment deze line; 1 draait het beeld met 90 graden, 2 draait het beeld met 180 graden, 3 draait het beeld met 270 graden
-  display.setTextSize(9);
   display.setTextColor(WHITE);//De kleur kan je als het goed is niet veranderen
 
 
@@ -343,7 +342,7 @@ void reverse(){
 void Display(int InvoerDisplay) {
   display.clearDisplay();
   if (InvoerDisplay >= 10 || InvoerDisplay < 0){
-    display.setCursor(10, 0);
+    display.setCursor(15, 0);
     display.setTextSize(9);
   } 
   else {
@@ -363,7 +362,7 @@ void servo(){
     myservo.write(Servo_Max_Degrees);
     // Serial.println("Pressed");
     Servo_Timer = millis();
-  } else if (millis() - Servo_Timer > 500){
+  } else if (millis() - Servo_Timer > Servo_Lowtime){
     myservo.write(Servo_Min_Degrees);
   }
 }
