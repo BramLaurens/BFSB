@@ -75,8 +75,8 @@ struct {
 #define Servo_Pin 32
 #define Servo_Max_Degrees 90
 #define Servo_Min_Degrees 0
-#define Servo_Lowtime 1000
-#define Servo_Timeout 5000
+#define Servo_Lowtime 500
+#define Servo_Timeout 1000
 Servo myservo;
 
 
@@ -158,18 +158,19 @@ CRemoteXY *remotexy;
 void setup(){
   Serial.begin(115200);
 
-  //Wifi
+  //Wifi & RemoteXY init
   remotexy = new CRemoteXY (
     RemoteXY_CONF_PROGMEM, 
     &RemoteXY, 
     new CRemoteXYConnectionServer (
       new CRemoteXYComm_WiFiPoint (
-        "BFSB_ESP32_Matthias",       // REMOTEXY_WIFI_SSID
+        "BFSB_ESP32_Bram",       // REMOTEXY_WIFI_SSID
         "12345678"),        // REMOTEXY_WIFI_PASSWORD
       6377                  // REMOTEXY_SERVER_PORT
     )
   );
 
+  //Create task on core 0 for RemoteXY handler
   xTaskCreatePinnedToCore(
     Task1code,
     "Task1",
@@ -239,11 +240,15 @@ void Task1code(void *pvParameters){
 }
 
 void loop() {
-  ultrasoon();
+  //ultrasoon();
   remoteMotorcontrol();
   servo();
   microswitch();
   Display(Score);
+
+  Serial.print(distance_cm);
+  Serial.print("  ");
+  Serial.println(Score);
 
   // if (CNY70 == true){
   //   ledcWrite(ch_motorL_FWD, 100);
@@ -334,10 +339,16 @@ void Display(int InvoerDisplay) {
   display.clearDisplay();
   if (InvoerDisplay >= 10 || InvoerDisplay < 0){
     display.setCursor(10, 0);
-  } else {
+    display.setTextSize(9);
+  } 
+  else {
     display.setCursor(40, 0);
+    display.setTextSize(9);
   }
-  Serial.println(Score);
+  if(InvoerDisplay <= -10 || InvoerDisplay >= 100){
+    display.setTextSize(6);
+  }
+  //Serial.println(Score);
   display.println(InvoerDisplay); //invoer wat wordt uitgebeeld op display
   display.display(); 
 }
@@ -347,9 +358,8 @@ void servo(){
     myservo.write(Servo_Max_Degrees);
     // Serial.println("Pressed");
     Servo_Timer = millis();
-  } else if (millis() - Servo_Timer > Servo_Lowtime){
+  } else if (millis() - Servo_Timer > 500){
     myservo.write(Servo_Min_Degrees);
-    // Serial.println("Not pressed");
   }
 }
 
@@ -382,9 +392,9 @@ void ultrasoon(){
   duration_us = pulseIn(Ultrasoon_Echo_Pin, HIGH);
   distance_cm = 0.017 * duration_us;
 
-  // Serial.print("distance: ");
-  // Serial.print(distance_cm);
-  // Serial.println(" cm");
+  //Serial.print("distance: ");
+  //Serial.print(distance_cm);
+  //Serial.println(" cm");
   
   Ultrasoon_Timer = millis();
   }
