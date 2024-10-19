@@ -5,6 +5,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <NewPing.h>
 
 TaskHandle_t Task1;
 
@@ -86,13 +87,16 @@ Servo myservo;
 
 
 /*Ultrasoon declarations*/
+#define MAX_DISTANCE 200
+
 #define Strafpunt 3
 #define Ultrasoon_Trig_Pin 26
 #define Ultrasoon_Echo_Pin 27
-#define Ultrasoon_Timeout 4000
-#define Ultrasoon_Measure_Delay 100
+#define Strafpunt_Timeout 4000
+#define Ultrasoon_Measure_Delay 50
 #define Strafpunt_Drempelwaarde_cm 7
 
+NewPing sonar(Ultrasoon_Trig_Pin, Ultrasoon_Echo_Pin, MAX_DISTANCE);
 
 /*CNY70 declarations*/
 #define Drempelwaarde_CNY70 2000
@@ -146,6 +150,7 @@ unsigned long Microswitch_Timer = 0;
 
 /*Ultrasoon Variables*/
 unsigned long Ultrasoon_Timer = 0;
+unsigned int Strafpunt_Timer = 0;
 int duration_us = 0;
 int distance_cm = 0;
 bool Ultrasoon_Timer_Toggle = true;
@@ -240,7 +245,7 @@ void Task1code(void *pvParameters){
 }
 
 void loop() {
-  //ultrasoon();
+  ultrasoon();
   remoteMotorcontrol();
   servo();
   microswitch();
@@ -384,30 +389,18 @@ bool CNY70(){
 }
 
 void ultrasoon(){
-  if (millis() - Ultrasoon_Timer > Ultrasoon_Measure_Delay && Ultrasoon_Timer_Toggle == true){
-  digitalWrite(Ultrasoon_Trig_Pin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(Ultrasoon_Trig_Pin, LOW);
+  if (millis() - Ultrasoon_Timer > Ultrasoon_Measure_Delay){
 
-  duration_us = pulseIn(Ultrasoon_Echo_Pin, HIGH);
-  distance_cm = 0.017 * duration_us;
-
-  //Serial.print("distance: ");
-  //Serial.print(distance_cm);
-  //Serial.println(" cm");
-  
-  Ultrasoon_Timer = millis();
+    distance_cm = (sonar.ping_cm());
+    Ultrasoon_Timer = millis();
   }
 
-  if (distance_cm < Strafpunt_Drempelwaarde_cm && distance_cm != 0){
+  if (distance_cm < Strafpunt_Drempelwaarde_cm && distance_cm != 0 && millis() - Strafpunt_Timer > Strafpunt_Timeout){
     Score = Score - Strafpunt;
     // Serial.println(Score);
     distance_cm = Strafpunt_Drempelwaarde_cm;
-    Ultrasoon_Timer_Toggle = false;
+    Strafpunt_Timer = millis();
   }
 
-  if (Ultrasoon_Timer_Toggle == false && millis() - Ultrasoon_Timer > Ultrasoon_Timeout){
-    Ultrasoon_Timer_Toggle = true;
-  }
   
 }
