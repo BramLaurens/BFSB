@@ -99,7 +99,7 @@ Servo myservo;
 NewPing sonar(Ultrasoon_Trig_Pin, Ultrasoon_Echo_Pin, MAX_DISTANCE);
 
 /*CNY70 declarations*/
-#define Drempelwaarde_CNY70 2000
+#define Drempelwaarde_CNY70 200
 #define CNY70_Pin 34
 
 
