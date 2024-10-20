@@ -122,6 +122,7 @@ void motorSpeedlimiter();
 void remoteMotorcontrol();
 void microswitch();
 bool CNY70();
+void arena_border();
 void ultrasoon();
 
 /*Motor Variables*/
@@ -247,23 +248,11 @@ void loop() {
   servo();
   microswitch();
   Display(Score);
+  arena_border();
 
   Serial.print(distance_cm);
   Serial.print("  ");
   Serial.println(Score);
-
-  // if (CNY70 == true){
-  //   ledcWrite(ch_motorL_FWD, 100);
-  //   digitalWrite(motorL_REV, LOW);
-  //   ledcWrite(ch_motorR_REV, 100)
-  //   digitalWrite(motorR_FWD, LOW);
-  //   delay(100);
-  //   ledcWrite(ch_motorL_FWD, 100);
-  //   digitalWrite(motorL_REV, LOW);
-  //   ledcWrite(ch_motorR_FWD, 100);
-  //   digitalWrite(motorR_REV, LOW);
-  //   delay(500);
-  // }
 }
 
 void remoteMotorcontrol(){
@@ -360,7 +349,8 @@ void servo(){
     myservo.write(Servo_Max_Degrees);
     // Serial.println("Pressed");
     Servo_Timer = millis();
-  } else if (millis() - Servo_Timer > Servo_Lowtime){
+  } 
+  else if (millis() - Servo_Timer > Servo_Lowtime){
     myservo.write(Servo_Min_Degrees);
   }
 }
@@ -377,11 +367,24 @@ bool CNY70(){
   if (analogRead(CNY70_Pin) >= Drempelwaarde_CNY70){
     return(false);
     // Serial.println("Zwart");
-  }
-
-  if (analogRead(CNY70_Pin) <= Drempelwaarde_CNY70){
+  } else {
     // Serial.println("Wit");
     return(true);
+  }
+}
+
+void arena_border(){
+  if (CNY70() == true){
+    ledcWrite(ch_motorL_FWD, 100);
+    digitalWrite(motorL_REV, LOW);
+    ledcWrite(ch_motorR_REV, 100);
+    digitalWrite(motorR_FWD, LOW);
+    delay(300);
+    ledcWrite(ch_motorL_FWD, 100);
+    digitalWrite(motorL_REV, LOW);
+    ledcWrite(ch_motorR_FWD, 100);
+    digitalWrite(motorR_REV, LOW);
+    delay(700);
   }
 }
 
