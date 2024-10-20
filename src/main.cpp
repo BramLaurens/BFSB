@@ -264,7 +264,10 @@ void  Ultrasoonsensor(){
 
 void Display(int InvoerDisplay){
   Serial.println("\n\nTesting van het OLED scherm:\n");
-  Serial.println("Controleer of de OLED juist is aangesloten");
+  Serial.println("Stap 1:\nSluit de Vcc aan op 3.3V en sluit de GND aan\n");
+  Serial.println("Stap 2:\nSluit de SCL aan op pin 22\n");
+  Serial.println("Stap 3:\nSluit de SDA aan op pin 21\n");
+  Serial.println("Stap 4: \nAls je alles hebt aangesloten mag je de test beginnen\n");
   Serial.println("Als alles klopt zal het beeldscherm het getal 1 tot 10 weergeven");
   Serial.println("Druk enter om te beginnen\n");
   Serial.read();
