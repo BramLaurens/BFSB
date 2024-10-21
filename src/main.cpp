@@ -92,6 +92,7 @@ Servo myservo;
 #define Strafpunt 3
 #define Ultrasoon_Trig_Pin 26
 #define Ultrasoon_Echo_Pin 27
+#define Strafpunt_LowTime 500
 #define Strafpunt_Timeout 4000
 #define Ultrasoon_Measure_Delay 50
 #define Strafpunt_Drempelwaarde_cm 7
@@ -152,10 +153,12 @@ unsigned long Microswitch_Timer = 0;
 /*Ultrasoon Variables*/
 unsigned long Ultrasoon_Timer = 0;
 unsigned int Strafpunt_Timer = 0;
+unsigned int Strafpunt_LowTimer = 0;
 int distance_cm = 0;
 
 
 int Score = 0;
+int lastScore = 0;
 
 CRemoteXY *remotexy;
 
@@ -226,7 +229,7 @@ void setup(){
 
   //CNY70
   pinMode(CNY70_Pin, INPUT);
-
+  pinMode(33, OUTPUT);
 
   //Ultrasoon
   pinMode(Ultrasoon_Trig_Pin, OUTPUT);
@@ -243,16 +246,22 @@ void Task1code(void *pvParameters){
 }
 
 void loop() {
+
+  digitalWrite(33, HIGH);
   ultrasoon();
   remoteMotorcontrol();
   servo();
   microswitch();
-  Display(Score);
   arena_border();
+  if(Score != lastScore){
+    Display(Score);
+  }
+  lastScore = Score;
+  digitalWrite(33, LOW);
 
-  Serial.print(distance_cm);
-  Serial.print("  ");
-  Serial.println(Score);
+  // Serial.print(distance_cm);
+  // Serial.print("  ");
+  // Serial.println(Score);
 }
 
 void remoteMotorcontrol(){
@@ -393,6 +402,11 @@ void ultrasoon(){
 
     distance_cm = (sonar.ping_cm());
     Ultrasoon_Timer = millis();
+  }
+
+  if(distance_cm < Strafpunt_Drempelwaarde_cm){
+    Strafpunt_LowTimer = millis();
+
   }
 
   if (distance_cm < Strafpunt_Drempelwaarde_cm && distance_cm != 0 && millis() - Strafpunt_Timer > Strafpunt_Timeout){
