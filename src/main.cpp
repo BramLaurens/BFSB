@@ -244,19 +244,7 @@ void loop() {
   servo();
   microswitch();
   Display(Score);
-
-  // if (CNY70 == true){
-  //   ledcWrite(ch_motorL_FWD, 100);
-  //   digitalWrite(motorL_REV, LOW);
-  //   ledcWrite(ch_motorR_REV, 100)
-  //   digitalWrite(motorR_FWD, LOW);
-  //   delay(100);
-  //   ledcWrite(ch_motorL_FWD, 100);
-  //   digitalWrite(motorL_REV, LOW);
-  //   ledcWrite(ch_motorR_FWD, 100);
-  //   digitalWrite(motorR_REV, LOW);
-  //   delay(500);
-  // }
+  arena_border();
 }
 
 void remoteMotorcontrol(){
@@ -306,9 +294,9 @@ void motorSpeedlimiter(){
 void forward(){
   motorSpeedlimiter();
   
-  Serial.print(speedL);
-  Serial.print("  ");
-  Serial.println(speedR);
+  // Serial.print(speedL);
+  // Serial.print("  ");
+  // Serial.println(speedR);
   ledcWrite(ch_motorL_FWD, speedL);
   digitalWrite(motorL_REV, LOW);
   ledcWrite(ch_motorR_FWD, speedR);
@@ -337,7 +325,7 @@ void Display(int InvoerDisplay) {
   } else {
     display.setCursor(40, 0);
   }
-  Serial.println(Score);
+  // Serial.println(Score);
   display.println(InvoerDisplay); //invoer wat wordt uitgebeeld op display
   display.display(); 
 }
@@ -365,39 +353,38 @@ bool CNY70(){
   if (analogRead(CNY70_Pin) >= Drempelwaarde_CNY70){
     return(false);
     // Serial.println("Zwart");
-  }
-
-  if (analogRead(CNY70_Pin) <= Drempelwaarde_CNY70){
-    Serial.println("Wit");
+  } else {
+    // Serial.println("Wit");
     return(true);
   }
 }
 
+void arena_border(){
+  if (CNY70() == true){
+    ledcWrite(ch_motorL_FWD, 50);
+    digitalWrite(motorL_REV, LOW);
+    ledcWrite(ch_motorR_REV, 50);
+    digitalWrite(motorR_FWD, LOW);
+    delay(300);
+    ledcWrite(ch_motorL_FWD, 50);
+    digitalWrite(motorL_REV, LOW);
+    ledcWrite(ch_motorR_FWD, 50);
+    digitalWrite(motorR_REV, LOW);
+    delay(1300);
+  }
+}
+
 void ultrasoon(){
-  if (millis() - Ultrasoon_Timer > Ultrasoon_Measure_Delay && Ultrasoon_Timer_Toggle == true){
-  digitalWrite(Ultrasoon_Trig_Pin, HIGH);
-  delayMicroseconds(10);
-  digitalWrite(Ultrasoon_Trig_Pin, LOW);
+  if (millis() - Ultrasoon_Timer > Ultrasoon_Measure_Delay){
 
-  duration_us = pulseIn(Ultrasoon_Echo_Pin, HIGH);
-  distance_cm = 0.017 * duration_us;
-
-  // Serial.print("distance: ");
-  // Serial.print(distance_cm);
-  // Serial.println(" cm");
-  
-  Ultrasoon_Timer = millis();
+    distance_cm = (sonar.ping_cm());
+    Ultrasoon_Timer = millis();
   }
 
-  if (distance_cm < Strafpunt_Drempelwaarde_cm && distance_cm != 0){
+  if (distance_cm < Strafpunt_Drempelwaarde_cm && distance_cm != 0 && millis() - Strafpunt_Timer > Strafpunt_Timeout){
     Score = Score - Strafpunt;
     // Serial.println(Score);
     distance_cm = Strafpunt_Drempelwaarde_cm;
-    Ultrasoon_Timer_Toggle = false;
+    Strafpunt_Timer = millis();
   }
-
-  if (Ultrasoon_Timer_Toggle == false && millis() - Ultrasoon_Timer > Ultrasoon_Timeout){
-    Ultrasoon_Timer_Toggle = true;
-  }
-  
 }
