@@ -5,6 +5,7 @@
 #include <Wire.h>
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
+#include <NewPing.h>
 
 TaskHandle_t Task1;
 
@@ -75,8 +76,8 @@ struct {
 #define Servo_Pin 32
 #define Servo_Max_Degrees 90
 #define Servo_Min_Degrees 0
-#define Servo_Lowtime 1000
-#define Servo_Timeout 5000
+#define Servo_Lowtime 500
+#define Servo_Timeout 1000
 Servo myservo;
 
 
@@ -86,16 +87,19 @@ Servo myservo;
 
 
 /*Ultrasoon declarations*/
+#define MAX_DISTANCE 200
+
 #define Strafpunt 3
 #define Ultrasoon_Trig_Pin 26
 #define Ultrasoon_Echo_Pin 27
-#define Ultrasoon_Timeout 4000
-#define Ultrasoon_Measure_Delay 100
+#define Strafpunt_Timeout 4000
+#define Ultrasoon_Measure_Delay 50
 #define Strafpunt_Drempelwaarde_cm 7
 
+NewPing sonar(Ultrasoon_Trig_Pin, Ultrasoon_Echo_Pin, MAX_DISTANCE);
 
 /*CNY70 declarations*/
-#define Drempelwaarde_CNY70 2000
+#define Drempelwaarde_CNY70 200
 #define CNY70_Pin 34
 
 
@@ -118,6 +122,7 @@ void motorSpeedlimiter();
 void remoteMotorcontrol();
 void microswitch();
 bool CNY70();
+void arena_border();
 void ultrasoon();
 
 /*Motor Variables*/
@@ -132,7 +137,7 @@ float basespeedR = 150;
 int maxSpeedL = 255;
 int maxSpeedR = 255;
 
-int motorLoffset = 30;
+int motorLoffset = 0;
 int motorRoffset = 0;
 
 
@@ -146,9 +151,8 @@ unsigned long Microswitch_Timer = 0;
 
 /*Ultrasoon Variables*/
 unsigned long Ultrasoon_Timer = 0;
-int duration_us = 0;
+unsigned int Strafpunt_Timer = 0;
 int distance_cm = 0;
-bool Ultrasoon_Timer_Toggle = true;
 
 
 int Score = 0;
@@ -158,18 +162,19 @@ CRemoteXY *remotexy;
 void setup(){
   Serial.begin(115200);
 
-  //Wifi
+  //Wifi & RemoteXY init
   remotexy = new CRemoteXY (
     RemoteXY_CONF_PROGMEM, 
     &RemoteXY, 
     new CRemoteXYConnectionServer (
       new CRemoteXYComm_WiFiPoint (
-        "BFSB_ESP32_Matthias",       // REMOTEXY_WIFI_SSID
+        "BFSB_ESP32_Bram",       // REMOTEXY_WIFI_SSID
         "12345678"),        // REMOTEXY_WIFI_PASSWORD
       6377                  // REMOTEXY_SERVER_PORT
     )
   );
 
+  //Create task on core 0 for RemoteXY handler
   xTaskCreatePinnedToCore(
     Task1code,
     "Task1",
@@ -185,7 +190,6 @@ void setup(){
   display.begin(SSD1306_SWITCHCAPVCC, 0x3C);
   display.clearDisplay();
   display.setRotation(2); //Voer een waarde tussen 1 en 3 in of comment deze line; 1 draait het beeld met 90 graden, 2 draait het beeld met 180 graden, 3 draait het beeld met 270 graden
-  display.setTextSize(9);
   display.setTextColor(WHITE);//De kleur kan je als het goed is niet veranderen
 
 
@@ -245,6 +249,10 @@ void loop() {
   microswitch();
   Display(Score);
   arena_border();
+
+  // Serial.print(distance_cm);
+  // Serial.print("  ");
+  // Serial.println(Score);
 }
 
 void remoteMotorcontrol(){
@@ -314,18 +322,24 @@ void reverse(){
   motorSpeedlimiter();
   digitalWrite(motorL_FWD, LOW);
   digitalWrite(motorR_FWD, LOW);
-  ledcWrite(ch_motorL_REV, speedL + motorLoffset);
-  ledcWrite(ch_motorR_REV, speedR + motorRoffset);
+  ledcWrite(ch_motorL_REV, speedL);
+  ledcWrite(ch_motorR_REV, speedR);
 }
 
 void Display(int InvoerDisplay) {
   display.clearDisplay();
   if (InvoerDisplay >= 10 || InvoerDisplay < 0){
-    display.setCursor(10, 0);
-  } else {
+    display.setCursor(15, 0);
+    display.setTextSize(9);
+  } 
+  else {
     display.setCursor(40, 0);
+    display.setTextSize(9);
   }
-  // Serial.println(Score);
+  if(InvoerDisplay <= -10 || InvoerDisplay >= 100){
+    display.setTextSize(6);
+  }
+  //Serial.println(Score);
   display.println(InvoerDisplay); //invoer wat wordt uitgebeeld op display
   display.display(); 
 }
@@ -335,9 +349,9 @@ void servo(){
     myservo.write(Servo_Max_Degrees);
     // Serial.println("Pressed");
     Servo_Timer = millis();
-  } else if (millis() - Servo_Timer > Servo_Lowtime){
+  } 
+  else if (millis() - Servo_Timer > Servo_Lowtime){
     myservo.write(Servo_Min_Degrees);
-    // Serial.println("Not pressed");
   }
 }
 
@@ -361,16 +375,16 @@ bool CNY70(){
 
 void arena_border(){
   if (CNY70() == true){
-    ledcWrite(ch_motorL_FWD, 50);
+    ledcWrite(ch_motorL_FWD, 100);
     digitalWrite(motorL_REV, LOW);
-    ledcWrite(ch_motorR_REV, 50);
+    ledcWrite(ch_motorR_REV, 100);
     digitalWrite(motorR_FWD, LOW);
     delay(300);
-    ledcWrite(ch_motorL_FWD, 50);
+    ledcWrite(ch_motorL_FWD, 100);
     digitalWrite(motorL_REV, LOW);
-    ledcWrite(ch_motorR_FWD, 50);
+    ledcWrite(ch_motorR_FWD, 100);
     digitalWrite(motorR_REV, LOW);
-    delay(1300);
+    delay(700);
   }
 }
 
