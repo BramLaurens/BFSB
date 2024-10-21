@@ -126,6 +126,7 @@ void arena_border();
 void ultrasoon();
 
 /*Motor Variables*/
+float pad_yAxis = 0;
 float pad_xAxis = 0;
 float padxSpeed = 0;
 float padFactor = 0.8;
@@ -168,7 +169,7 @@ void setup(){
     &RemoteXY, 
     new CRemoteXYConnectionServer (
       new CRemoteXYComm_WiFiPoint (
-        "BFSB_ESP32_Bram",       // REMOTEXY_WIFI_SSID
+        "BFSB_ESP32_Matthias",       // REMOTEXY_WIFI_SSID
         "12345678"),        // REMOTEXY_WIFI_PASSWORD
       6377                  // REMOTEXY_SERVER_PORT
     )
@@ -248,7 +249,7 @@ void loop() {
   servo();
   microswitch();
   Display(Score);
-  arena_border();
+  // arena_border();
 
   // Serial.print(distance_cm);
   // Serial.print("  ");
@@ -256,6 +257,7 @@ void loop() {
 }
 
 void remoteMotorcontrol(){
+  pad_yAxis = RemoteXY.joystick_01_y;
   pad_xAxis = RemoteXY.joystick_01_x;
   padxSpeed = pad_xAxis * padFactor;
 
@@ -273,8 +275,8 @@ void remoteMotorcontrol(){
 }
 
 void motorSpeedcontrolFWD(float padSpeed){
-  speedL = basespeedL + motorLoffset + padSpeed;
-  speedR = basespeedR + motorRoffset - padSpeed;
+  speedL = basespeedL + motorLoffset + padSpeed + pad_yAxis;
+  speedR = basespeedR + motorRoffset - padSpeed + pad_yAxis;
   forward();
 }
 
