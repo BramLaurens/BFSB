@@ -98,6 +98,7 @@ Servo myservo;
 #define Strafpunt_Timeout 4000
 #define Ultrasoon_Measure_Delay 50
 #define Strafpunt_Drempelwaarde_cm 7
+#define Strafpunt_lowTime 500
 
 NewPing sonar(Ultrasoon_Trig_Pin, Ultrasoon_Echo_Pin, MAX_DISTANCE);
 
@@ -118,7 +119,7 @@ void brake();
 void reverse();
 void servo();
 void Display(int InvoerDisplay);
-void motorSpeedcontrolFWD(float padSpeed);
+void motorSpeedcontrolFWD(float padxSpeed, float padySpeed);
 void motorSpeedcontrolREV(float padSpeed);
 void Task1code(void * pvParameters);
 void motorSpeedlimiter();
@@ -160,7 +161,6 @@ unsigned long Ultrasoon_Timer = 0;
 unsigned int Strafpunt_Timer = 0;
 unsigned int Strafpunt_LowTimer = 0;
 int distance_cm = 0; 
-int Strafpunt_Lowtime = 0;
 
 int Score = 0;
 int lastScore = 0;
@@ -253,14 +253,6 @@ void Task1code(void *pvParameters){
     if (millis() - Ultrasoon_Timer > Ultrasoon_Measure_Delay){
       distance_cm = (sonar.ping_cm());
       Ultrasoon_Timer = millis();
-
-      if (distance_cm < Strafpunt_Drempelwaarde_cm){
-        Strafpunt_Lowtime++;
-      }
-      else {
-        Strafpunt_Lowtime = 0;
-      }
-
     }
   } 
 }
@@ -422,14 +414,14 @@ void arena_border(){
 }
 
 void ultrasoon(){
-  if(distance_cm < Strafpunt_Drempelwaarde_cm){
+  if(distance_cm > Strafpunt_Drempelwaarde_cm){
     Strafpunt_LowTimer = millis();
   }
 
-  if (distance_cm < Strafpunt_Drempelwaarde_cm && distance_cm != 0 && millis() - Strafpunt_Timer > Strafpunt_Timeout && Strafpunt_Lowtime > 3){
-    Score = Score - Strafpunt;
-    // Serial.println(Score);
-    distance_cm = Strafpunt_Drempelwaarde_cm;
-    Strafpunt_Timer = millis();
+  if(millis() - Strafpunt_LowTimer >= Strafpunt_lowTime){
+    if(millis() - Strafpunt_Timer > Strafpunt_Timeout){
+      Score = Score - Strafpunt;
+      Strafpunt_Timer = millis();
+    }
   }
 }
