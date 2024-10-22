@@ -130,8 +130,11 @@ void ultrasoon();
 
 /*Motor Variables*/
 float pad_xAxis = 0;
+float pad_yAxis = 0;
 float padxSpeed = 0;
+float padySpeed = 0;
 float padFactor = 0.8;
+float padYfactor = 0.5;
 
 float speedL = 0;
 float speedR = 0;
@@ -285,10 +288,12 @@ void loop() {
 
 void remoteMotorcontrol(){
   pad_xAxis = RemoteXY.joystick_01_x;
+  pad_yAxis = RemoteXY.joystick_01_y;
   padxSpeed = pad_xAxis * padFactor;
+  padySpeed = pad_yAxis * padYfactor;
 
   if(RemoteXY.button_01 == 1){
-    motorSpeedcontrolFWD(padxSpeed);
+    motorSpeedcontrolFWD(padxSpeed, padySpeed);
   }
   else{
     if(RemoteXY.button_02 == 1){
@@ -300,9 +305,9 @@ void remoteMotorcontrol(){
   }
 }
 
-void motorSpeedcontrolFWD(float padSpeed){
-  speedL = basespeedL + motorLoffset + padSpeed;
-  speedR = basespeedR + motorRoffset - padSpeed;
+void motorSpeedcontrolFWD(float padSpeed, float padySpeed){
+  speedL = basespeedL + motorLoffset + padySpeed + padSpeed;
+  speedR = basespeedR + motorRoffset + padySpeed - padSpeed;
   forward();
 }
 
