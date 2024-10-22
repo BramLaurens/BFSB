@@ -378,16 +378,18 @@ bool CNY70(){
 
 void arena_border(){
   if (CNY70() == true){
-    ledcWrite(ch_motorL_FWD, 100);
+    brake();
+    ledcWrite(ch_motorL_FWD, 50);
     digitalWrite(motorL_REV, LOW);
-    ledcWrite(ch_motorR_REV, 100);
+    ledcWrite(ch_motorR_REV, 50);
     digitalWrite(motorR_FWD, LOW);
-    delay(300);
-    ledcWrite(ch_motorL_FWD, 100);
+    delay(350);
+    brake();
+    ledcWrite(ch_motorL_FWD, 50);
     digitalWrite(motorL_REV, LOW);
-    ledcWrite(ch_motorR_FWD, 100);
+    ledcWrite(ch_motorR_FWD, 50);
     digitalWrite(motorR_REV, LOW);
-    delay(700);
+    delay(1400);
   }
 }
 
