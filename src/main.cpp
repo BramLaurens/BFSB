@@ -250,7 +250,7 @@ void loop() {
   servo();
   microswitch();
   Display(Score);
-  // arena_border();
+  arena_border();
 
   // Serial.print(distance_cm);
   // Serial.print("  ");
@@ -294,11 +294,11 @@ void motorSpeedlimiter(){
   if(speedR > maxSpeedR){
     speedR = maxSpeedR;
   }
-  if(speedL < 0){
-    speedL = 0;
+  if(speedL < 40){
+    speedL = 40;
   }
-  if(speedR < 0){
-    speedR = 0;
+  if(speedR < 40){
+    speedR = 40;
   }
 }
 
@@ -308,9 +308,9 @@ void forward(){
   // Serial.print(speedL);
   // Serial.print("  ");
   // Serial.println(speedR);
-  ledcWrite(ch_motorL_FWD, speedL);
+  ledcWrite(ch_motorL_FWD, speedL*0.65);
   digitalWrite(motorL_REV, LOW);
-  ledcWrite(ch_motorR_FWD, speedR);
+  ledcWrite(ch_motorR_FWD, speedR*0.65);
   digitalWrite(motorR_REV, LOW);
 }
 
@@ -325,8 +325,8 @@ void reverse(){
   motorSpeedlimiter();
   digitalWrite(motorL_FWD, LOW);
   digitalWrite(motorR_FWD, LOW);
-  ledcWrite(ch_motorL_REV, speedL);
-  ledcWrite(ch_motorR_REV, speedR);
+  ledcWrite(ch_motorL_REV, speedL*0.65);
+  ledcWrite(ch_motorR_REV, speedR*0.65);
 }
 
 void Display(int InvoerDisplay) {
@@ -378,17 +378,17 @@ bool CNY70(){
 
 void arena_border(){
   if (CNY70() == true){
+    // brake();
+    // ledcWrite(ch_motorL_FWD, 50);
+    // digitalWrite(motorL_REV, LOW);
+    // ledcWrite(ch_motorR_REV, 50);
+    // digitalWrite(motorR_FWD, LOW);
+    // delay(350);
     brake();
-    ledcWrite(ch_motorL_FWD, 50);
-    digitalWrite(motorL_REV, LOW);
+    ledcWrite(ch_motorL_REV, 50);
+    digitalWrite(motorL_FWD, LOW);
     ledcWrite(ch_motorR_REV, 50);
     digitalWrite(motorR_FWD, LOW);
-    delay(350);
-    brake();
-    ledcWrite(ch_motorL_FWD, 50);
-    digitalWrite(motorL_REV, LOW);
-    ledcWrite(ch_motorR_FWD, 50);
-    digitalWrite(motorR_REV, LOW);
     delay(1400);
   }
 }
