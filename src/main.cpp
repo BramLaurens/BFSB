@@ -58,6 +58,10 @@ struct {
 //           END RemoteXY include          //
 /////////////////////////////////////////////
 
+/*VEHICLE SPECIFIC DECLARATIONS*/
+float speedFactor = 0.4;
+int motorLoffset = 0;
+int motorRoffset = 0;
 
 /*Motor declarations*/
 #define motorL_FWD 4
@@ -128,6 +132,8 @@ void microswitch();
 bool CNY70();
 void arena_border();
 void ultrasoon();
+void lineReverse();
+void lineForward();
 
 /*Motor Variables*/
 float pad_xAxis = 0;
@@ -144,8 +150,7 @@ float basespeedR = 150;
 int maxSpeedL = 255;
 int maxSpeedR = 255;
 
-int motorLoffset = 0;
-int motorRoffset = 0;
+
 
 
 /*Servo Variables*/
@@ -162,8 +167,14 @@ unsigned int Strafpunt_Timer = 0;
 unsigned int Strafpunt_LowTimer = 0;
 int distance_cm = 0; 
 
+/*Score variables*/
 int Score = 0;
 int lastScore = 0;
+
+/*CNY70 Variables*/
+bool forwardDir = true;
+unsigned int lineCrossedtime = 0;
+unsigned int linecrossTimeout = 3000;
 
 CRemoteXY *remotexy;
 
@@ -262,7 +273,7 @@ void loop() {
   remoteMotorcontrol();
   servo();
   microswitch();
-  // //arena_border();
+  arena_border();
   if(Score != lastScore){
     Display(Score);
   }
@@ -286,10 +297,12 @@ void remoteMotorcontrol(){
 
   if(RemoteXY.button_01 == 1){
     motorSpeedcontrolFWD(padxSpeed, padySpeed);
+    forwardDir = true;
   }
   else{
     if(RemoteXY.button_02 == 1){
       motorSpeedcontrolREV(padxSpeed);
+      forwardDir = false;
     }
     else{
       brake();
@@ -298,14 +311,14 @@ void remoteMotorcontrol(){
 }
 
 void motorSpeedcontrolFWD(float padSpeed, float padySpeed){
-  speedL = basespeedL + motorLoffset + padySpeed + padSpeed;
-  speedR = basespeedR + motorRoffset + padySpeed - padSpeed;
+  speedL = speedFactor*(basespeedL + motorLoffset + padySpeed + padSpeed);
+  speedR = speedFactor*(basespeedR + motorRoffset + padySpeed - padSpeed);
   forward();
 }
 
 void motorSpeedcontrolREV(float padSpeed){
-  speedL = basespeedL + motorLoffset + padSpeed;
-  speedR = basespeedR + motorRoffset - padSpeed;
+  speedL = speedFactor*(basespeedL + motorLoffset + padySpeed + padSpeed);
+  speedR = speedFactor*(basespeedR + motorRoffset + padySpeed - padSpeed);
   reverse();
 }
 
@@ -400,20 +413,55 @@ bool CNY70(){
 
 void arena_border(){
   if (CNY70() == true){
-    ledcWrite(ch_motorL_FWD, 100);
-    digitalWrite(motorL_REV, LOW);
-    ledcWrite(ch_motorR_REV, 100);
-    digitalWrite(motorR_FWD, LOW);
-    delay(300);
-    ledcWrite(ch_motorL_FWD, 100);
-    digitalWrite(motorL_REV, LOW);
-    ledcWrite(ch_motorR_FWD, 100);
-    digitalWrite(motorR_REV, LOW);
-    delay(700);
+    lineCrossedtime = millis();
+
+    /*Zorg ervoor dat de robot eerst een stukje van de lijn af rijdt in tegengestelde richting,
+    anders komt hij vast te zitten op de lijn*/
+    brake();
+    if(forwardDir == true){
+      lineReverse();
+      forwardDir = false;
+      delay(500);
+    }
+    else{
+      lineForward();
+      forwardDir = true;
+      delay(500);
+    }
+
+    while(millis()-lineCrossedtime < linecrossTimeout){
+
+      if(CNY70() == true){
+
+        /*Zorg ervoor dat de robot eerst een stukje van de lijn af rijdt in tegengestelde richting,
+        anders komt hij vast te zitten op de lijn*/
+        if(forwardDir == true){
+          forwardDir = false;
+          brake();
+          lineReverse();
+          delay(500);
+        }
+        else{
+          forwardDir = true;
+          brake();
+          lineForward();
+          delay(500);
+        }
+      }
+
+      if(forwardDir == true){
+        lineForward();
+      }
+      if(forwardDir == false){
+        lineReverse();
+      }
+    }
+    
   }
 }
 
 void ultrasoon(){
+  Serial.println(distance_cm);
   if(distance_cm > Strafpunt_Drempelwaarde_cm){
     Strafpunt_LowTimer = millis();
   }
@@ -424,4 +472,18 @@ void ultrasoon(){
       Strafpunt_Timer = millis();
     }
   }
+}
+
+void lineReverse(){
+  ledcWrite(ch_motorL_REV, 45);
+  digitalWrite(motorL_FWD, LOW);
+  ledcWrite(ch_motorR_REV, 45);
+  digitalWrite(motorR_FWD, LOW);
+}
+
+void lineForward(){
+  ledcWrite(ch_motorL_FWD, 45);
+  digitalWrite(motorL_REV, LOW);
+  ledcWrite(ch_motorR_FWD, 45);
+  digitalWrite(motorR_REV, LOW);
 }
