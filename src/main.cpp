@@ -29,12 +29,13 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // RemoteXY GUI configuration  
 #pragma pack(push, 1)  
-uint8_t RemoteXY_CONF[] =   // 84 bytes
-  { 255,5,0,0,0,77,0,19,0,0,0,0,31,2,106,200,200,84,1,1,
-  4,0,1,58,64,57,57,154,7,24,24,2,137,31,70,87,68,0,1,55,
+uint8_t RemoteXY_CONF[] =   // 101 bytes
+  { 255,6,0,0,0,94,0,19,0,0,0,0,31,2,106,200,200,84,1,1,
+  5,0,1,58,64,57,57,154,7,24,24,2,137,31,70,87,68,0,1,55,
   112,57,57,154,46,24,24,2,2,31,82,69,86,0,5,208,17,143,143,14,
   7,60,60,0,2,26,31,1,37,72,57,57,118,27,24,24,1,37,31,66,
-  79,78,75,0 };
+  79,78,75,0,1,19,112,57,57,78,47,24,24,0,2,31,84,79,69,84,
+  0 };
   
 // this structure defines all the variables and events of the control interface 
 struct {
@@ -45,6 +46,7 @@ struct {
   int8_t joystick_01_x; // from -100 to 100
   int8_t joystick_01_y; // from -100 to 100
   uint8_t button_03; // =1 if button pressed, else =0
+  uint8_t button_04; // =1 if button pressed, else =0
 
     // other variable
   uint8_t connect_flag;  // =1 if wire connected, else =0
@@ -89,10 +91,10 @@ Servo myservo;
 /*Ultrasoon declarations*/
 #define MAX_DISTANCE 200
 
+
 #define Strafpunt 3
 #define Ultrasoon_Trig_Pin 26
 #define Ultrasoon_Echo_Pin 27
-#define Strafpunt_LowTime 500
 #define Strafpunt_Timeout 4000
 #define Ultrasoon_Measure_Delay 50
 #define Strafpunt_Drempelwaarde_cm 7
@@ -154,8 +156,8 @@ unsigned long Microswitch_Timer = 0;
 unsigned long Ultrasoon_Timer = 0;
 unsigned int Strafpunt_Timer = 0;
 unsigned int Strafpunt_LowTimer = 0;
-int distance_cm = 0;
-
+int distance_cm = 0; 
+int Strafpunt_Lowtime = 0;
 
 int Score = 0;
 int lastScore = 0;
@@ -229,11 +231,13 @@ void setup(){
 
   //CNY70
   pinMode(CNY70_Pin, INPUT);
-  pinMode(33, OUTPUT);
 
   //Ultrasoon
   pinMode(Ultrasoon_Trig_Pin, OUTPUT);
   pinMode(Ultrasoon_Echo_Pin, INPUT);
+  Display(Score);
+
+  pinMode(12, OUTPUT);
 }
 
 void Task1code(void *pvParameters){
@@ -242,22 +246,37 @@ void Task1code(void *pvParameters){
     //Serial.println(xPortGetCoreID());
     RemoteXY_delay(1);          
     remotexy->handler ();
+
+    if (millis() - Ultrasoon_Timer > Ultrasoon_Measure_Delay){
+      distance_cm = (sonar.ping_cm());
+      Ultrasoon_Timer = millis();
+
+      if (distance_cm < Strafpunt_Drempelwaarde_cm){
+        Strafpunt_Lowtime++;
+      }
+      else {
+        Strafpunt_Lowtime = 0;
+      }
+
+    }
   } 
 }
 
 void loop() {
-
-  digitalWrite(33, HIGH);
   ultrasoon();
   remoteMotorcontrol();
   servo();
   microswitch();
-  arena_border();
+  // //arena_border();
   if(Score != lastScore){
     Display(Score);
   }
   lastScore = Score;
-  digitalWrite(33, LOW);
+
+  if(RemoteXY.button_04 == 1){
+    digitalWrite(12, HIGH);
+  }
+
 
   // Serial.print(distance_cm);
   // Serial.print("  ");
@@ -373,12 +392,12 @@ void microswitch(){
 }
 
 bool CNY70(){
-  if (analogRead(CNY70_Pin) >= Drempelwaarde_CNY70){
-    return(false);
-    // Serial.println("Zwart");
-  } else {
-    // Serial.println("Wit");
+  if (analogRead(CNY70_Pin) <= Drempelwaarde_CNY70){
     return(true);
+    // Serial.println("Wit");
+  } else {
+    // Serial.println("Zwart");
+    return(false);
   }
 }
 
@@ -398,18 +417,11 @@ void arena_border(){
 }
 
 void ultrasoon(){
-  if (millis() - Ultrasoon_Timer > Ultrasoon_Measure_Delay){
-
-    distance_cm = (sonar.ping_cm());
-    Ultrasoon_Timer = millis();
-  }
-
   if(distance_cm < Strafpunt_Drempelwaarde_cm){
     Strafpunt_LowTimer = millis();
-
   }
 
-  if (distance_cm < Strafpunt_Drempelwaarde_cm && distance_cm != 0 && millis() - Strafpunt_Timer > Strafpunt_Timeout){
+  if (distance_cm < Strafpunt_Drempelwaarde_cm && distance_cm != 0 && millis() - Strafpunt_Timer > Strafpunt_Timeout && Strafpunt_Lowtime > 3){
     Score = Score - Strafpunt;
     // Serial.println(Score);
     distance_cm = Strafpunt_Drempelwaarde_cm;
