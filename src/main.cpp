@@ -154,6 +154,7 @@ unsigned long Microswitch_Timer = 0;
 unsigned long Ultrasoon_Timer = 0;
 unsigned int Strafpunt_Timer = 0;
 int distance_cm = 0;
+int Strafpunt_Lowtime = 0;
 
 
 int Score = 0;
@@ -366,12 +367,12 @@ void microswitch(){
 }
 
 bool CNY70(){
-  if (analogRead(CNY70_Pin) >= Drempelwaarde_CNY70){
-    return(false);
-    // Serial.println("Zwart");
-  } else {
-    // Serial.println("Wit");
+  if (analogRead(CNY70_Pin) <= Drempelwaarde_CNY70){
     return(true);
+    // Serial.println("Wit");
+  } else {
+    // Serial.println("Zwart");
+    return(false);
   }
 }
 
@@ -392,12 +393,17 @@ void arena_border(){
 
 void ultrasoon(){
   if (millis() - Ultrasoon_Timer > Ultrasoon_Measure_Delay){
-
     distance_cm = (sonar.ping_cm());
+    if (distance_cm < Strafpunt_Drempelwaarde_cm){
+      Strafpunt_Lowtime++;
+    }
+    else {
+      Strafpunt_Lowtime = 0;
+    }
     Ultrasoon_Timer = millis();
   }
 
-  if (distance_cm < Strafpunt_Drempelwaarde_cm && distance_cm != 0 && millis() - Strafpunt_Timer > Strafpunt_Timeout){
+  if (distance_cm < Strafpunt_Drempelwaarde_cm && distance_cm != 0 && millis() - Strafpunt_Timer > Strafpunt_Timeout && Strafpunt_Lowtime > 3){
     Score = Score - Strafpunt;
     // Serial.println(Score);
     distance_cm = Strafpunt_Drempelwaarde_cm;
