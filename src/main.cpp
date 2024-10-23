@@ -29,12 +29,13 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, -1);
 
 // RemoteXY GUI configuration  
 #pragma pack(push, 1)  
-uint8_t RemoteXY_CONF[] =   // 84 bytes
-  { 255,5,0,0,0,77,0,19,0,0,0,0,31,2,106,200,200,84,1,1,
-  4,0,1,58,64,57,57,154,7,24,24,2,137,31,70,87,68,0,1,55,
+uint8_t RemoteXY_CONF[] =   // 101 bytes
+  { 255,6,0,0,0,94,0,19,0,0,0,0,31,2,106,200,200,84,1,1,
+  5,0,1,58,64,57,57,154,7,24,24,2,137,31,70,87,68,0,1,55,
   112,57,57,154,46,24,24,2,2,31,82,69,86,0,5,208,17,143,143,14,
   7,60,60,0,2,26,31,1,37,72,57,57,118,27,24,24,1,37,31,66,
-  79,78,75,0 };
+  79,78,75,0,1,19,112,57,57,78,47,24,24,0,2,31,84,79,69,84,
+  0 };
   
 // this structure defines all the variables and events of the control interface 
 struct {
@@ -45,6 +46,7 @@ struct {
   int8_t joystick_01_x; // from -100 to 100
   int8_t joystick_01_y; // from -100 to 100
   uint8_t button_03; // =1 if button pressed, else =0
+  uint8_t button_04; // =1 if button pressed, else =0
 
     // other variable
   uint8_t connect_flag;  // =1 if wire connected, else =0
@@ -56,6 +58,10 @@ struct {
 //           END RemoteXY include          //
 /////////////////////////////////////////////
 
+/*VEHICLE SPECIFIC DECLARATIONS*/
+float speedFactor = 0.8;
+int motorLoffset = 0;
+int motorRoffset = 0;
 
 /*Motor declarations*/
 #define motorL_FWD 4
@@ -89,12 +95,14 @@ Servo myservo;
 /*Ultrasoon declarations*/
 #define MAX_DISTANCE 200
 
+
 #define Strafpunt 3
 #define Ultrasoon_Trig_Pin 26
 #define Ultrasoon_Echo_Pin 27
 #define Strafpunt_Timeout 4000
 #define Ultrasoon_Measure_Delay 50
 #define Strafpunt_Drempelwaarde_cm 7
+#define Strafpunt_lowTime 500
 
 NewPing sonar(Ultrasoon_Trig_Pin, Ultrasoon_Echo_Pin, MAX_DISTANCE);
 
@@ -115,7 +123,7 @@ void brake();
 void reverse();
 void servo();
 void Display(int InvoerDisplay);
-void motorSpeedcontrolFWD(float padSpeed);
+void motorSpeedcontrolFWD(float padxSpeed, float padySpeed);
 void motorSpeedcontrolREV(float padSpeed);
 void Task1code(void * pvParameters);
 void motorSpeedlimiter();
@@ -124,12 +132,16 @@ void microswitch();
 bool CNY70();
 void arena_border();
 void ultrasoon();
+void lineReverse();
+void lineForward();
 
 /*Motor Variables*/
-float pad_yAxis = 0;
 float pad_xAxis = 0;
+float pad_yAxis = 0;
 float padxSpeed = 0;
+float padySpeed = 0;
 float padFactor = 0.8;
+float padYfactor = 0.5;
 
 float speedL = 0;
 float speedR = 0;
@@ -138,8 +150,7 @@ float basespeedR = 150;
 int maxSpeedL = 255;
 int maxSpeedR = 255;
 
-int motorLoffset = 0;
-int motorRoffset = 0;
+
 
 
 /*Servo Variables*/
@@ -153,11 +164,17 @@ unsigned long Microswitch_Timer = 0;
 /*Ultrasoon Variables*/
 unsigned long Ultrasoon_Timer = 0;
 unsigned int Strafpunt_Timer = 0;
-int distance_cm = 0;
-int Strafpunt_Lowtime = 0;
+unsigned int Strafpunt_LowTimer = 0;
+int distance_cm = 0; 
 
-
+/*Score variables*/
 int Score = 0;
+int lastScore = 0;
+
+/*CNY70 Variables*/
+bool forwardDir = true;
+unsigned int lineCrossedtime = 0;
+unsigned int linecrossTimeout = 3000;
 
 CRemoteXY *remotexy;
 
@@ -170,7 +187,7 @@ void setup(){
     &RemoteXY, 
     new CRemoteXYConnectionServer (
       new CRemoteXYComm_WiFiPoint (
-        "BFSB_ESP32_Matthias",       // REMOTEXY_WIFI_SSID
+        "BFSB_ESP32_Bram",       // REMOTEXY_WIFI_SSID
         "12345678"),        // REMOTEXY_WIFI_PASSWORD
       6377                  // REMOTEXY_SERVER_PORT
     )
@@ -229,10 +246,12 @@ void setup(){
   //CNY70
   pinMode(CNY70_Pin, INPUT);
 
-
   //Ultrasoon
   pinMode(Ultrasoon_Trig_Pin, OUTPUT);
   pinMode(Ultrasoon_Echo_Pin, INPUT);
+  Display(Score);
+
+  pinMode(12, OUTPUT);
 }
 
 void Task1code(void *pvParameters){
@@ -241,6 +260,11 @@ void Task1code(void *pvParameters){
     //Serial.println(xPortGetCoreID());
     RemoteXY_delay(1);          
     remotexy->handler ();
+
+    if (millis() - Ultrasoon_Timer > Ultrasoon_Measure_Delay){
+      distance_cm = (sonar.ping_cm());
+      Ultrasoon_Timer = millis();
+    }
   } 
 }
 
@@ -249,8 +273,16 @@ void loop() {
   remoteMotorcontrol();
   servo();
   microswitch();
-  Display(Score);
   arena_border();
+  if(Score != lastScore){
+    Display(Score);
+  }
+  lastScore = Score;
+
+  if(RemoteXY.button_04 == 1){
+    digitalWrite(12, HIGH);
+  }
+
 
   // Serial.print(distance_cm);
   // Serial.print("  ");
@@ -258,16 +290,19 @@ void loop() {
 }
 
 void remoteMotorcontrol(){
-  pad_yAxis = RemoteXY.joystick_01_y;
   pad_xAxis = RemoteXY.joystick_01_x;
+  pad_yAxis = RemoteXY.joystick_01_y;
   padxSpeed = pad_xAxis * padFactor;
+  padySpeed = pad_yAxis * padYfactor;
 
   if(RemoteXY.button_01 == 1){
-    motorSpeedcontrolFWD(padxSpeed);
+    motorSpeedcontrolFWD(padxSpeed, padySpeed);
+    forwardDir = true;
   }
   else{
     if(RemoteXY.button_02 == 1){
       motorSpeedcontrolREV(padxSpeed);
+      forwardDir = false;
     }
     else{
       brake();
@@ -275,15 +310,15 @@ void remoteMotorcontrol(){
   }
 }
 
-void motorSpeedcontrolFWD(float padSpeed){
-  speedL = basespeedL + motorLoffset + padSpeed + pad_yAxis;
-  speedR = basespeedR + motorRoffset - padSpeed + pad_yAxis;
+void motorSpeedcontrolFWD(float padSpeed, float padySpeed){
+  speedL = speedFactor*(basespeedL + motorLoffset + padySpeed + padSpeed);
+  speedR = speedFactor*(basespeedR + motorRoffset + padySpeed - padSpeed);
   forward();
 }
 
 void motorSpeedcontrolREV(float padSpeed){
-  speedL = basespeedL + motorLoffset + padSpeed;
-  speedR = basespeedR + motorRoffset - padSpeed;
+  speedL = speedFactor*(basespeedL + motorLoffset + padySpeed + padSpeed);
+  speedR = speedFactor*(basespeedR + motorRoffset + padySpeed - padSpeed);
   reverse();
 }
 
@@ -294,23 +329,23 @@ void motorSpeedlimiter(){
   if(speedR > maxSpeedR){
     speedR = maxSpeedR;
   }
-  if(speedL < 40){
-    speedL = 40;
+  if(speedL < 0){
+    speedL = 0;
   }
-  if(speedR < 40){
-    speedR = 40;
+  if(speedR < 0){
+    speedR = 0;
   }
 }
 
 void forward(){
   motorSpeedlimiter();
   
-  // Serial.print(speedL);
-  // Serial.print("  ");
-  // Serial.println(speedR);
-  ledcWrite(ch_motorL_FWD, speedL*0.65);
+  Serial.print(speedL);
+  Serial.print("  ");
+  Serial.println(speedR);
+  ledcWrite(ch_motorL_FWD, speedL);
   digitalWrite(motorL_REV, LOW);
-  ledcWrite(ch_motorR_FWD, speedR*0.65);
+  ledcWrite(ch_motorR_FWD, speedR);
   digitalWrite(motorR_REV, LOW);
 }
 
@@ -325,8 +360,8 @@ void reverse(){
   motorSpeedlimiter();
   digitalWrite(motorL_FWD, LOW);
   digitalWrite(motorR_FWD, LOW);
-  ledcWrite(ch_motorL_REV, speedL*0.65);
-  ledcWrite(ch_motorR_REV, speedR*0.65);
+  ledcWrite(ch_motorL_REV, speedL);
+  ledcWrite(ch_motorR_REV, speedR);
 }
 
 void Display(int InvoerDisplay) {
@@ -378,37 +413,77 @@ bool CNY70(){
 
 void arena_border(){
   if (CNY70() == true){
-    // brake();
-    // ledcWrite(ch_motorL_FWD, 50);
-    // digitalWrite(motorL_REV, LOW);
-    // ledcWrite(ch_motorR_REV, 50);
-    // digitalWrite(motorR_FWD, LOW);
-    // delay(350);
+    lineCrossedtime = millis();
+
+    /*Zorg ervoor dat de robot eerst een stukje van de lijn af rijdt in tegengestelde richting,
+    anders komt hij vast te zitten op de lijn*/
     brake();
-    ledcWrite(ch_motorL_REV, 50);
-    digitalWrite(motorL_FWD, LOW);
-    ledcWrite(ch_motorR_REV, 50);
-    digitalWrite(motorR_FWD, LOW);
-    delay(1400);
+    if(forwardDir == true){
+      lineReverse();
+      forwardDir = false;
+      delay(700);
+    }
+    else{
+      lineForward();
+      forwardDir = true;
+      delay(700);
+    }
+
+    while(millis()-lineCrossedtime < linecrossTimeout){
+
+      if(CNY70() == true){
+
+        /*Zorg ervoor dat de robot eerst een stukje van de lijn af rijdt in tegengestelde richting,
+        anders komt hij vast te zitten op de lijn*/
+        if(forwardDir == true){
+          forwardDir = false;
+          brake();
+          lineReverse();
+          delay(700);
+        }
+        else{
+          forwardDir = true;
+          brake();
+          lineForward();
+          delay(700);
+        }
+      }
+
+      if(forwardDir == true){
+        lineForward();
+      }
+      if(forwardDir == false){
+        lineReverse();
+      }
+    }
+    
   }
 }
 
 void ultrasoon(){
-  if (millis() - Ultrasoon_Timer > Ultrasoon_Measure_Delay){
-    distance_cm = (sonar.ping_cm());
-    if (distance_cm < Strafpunt_Drempelwaarde_cm){
-      Strafpunt_Lowtime++;
-    }
-    else {
-      Strafpunt_Lowtime = 0;
-    }
-    Ultrasoon_Timer = millis();
+  Serial.println(distance_cm);
+  if(distance_cm > Strafpunt_Drempelwaarde_cm){
+    Strafpunt_LowTimer = millis();
   }
 
-  if (distance_cm < Strafpunt_Drempelwaarde_cm && distance_cm != 0 && millis() - Strafpunt_Timer > Strafpunt_Timeout && Strafpunt_Lowtime > 3){
-    Score = Score - Strafpunt;
-    // Serial.println(Score);
-    distance_cm = Strafpunt_Drempelwaarde_cm;
-    Strafpunt_Timer = millis();
+  if(millis() - Strafpunt_LowTimer >= Strafpunt_lowTime){
+    if(millis() - Strafpunt_Timer > Strafpunt_Timeout){
+      Score = Score - Strafpunt;
+      Strafpunt_Timer = millis();
+    }
   }
+}
+
+void lineReverse(){
+  ledcWrite(ch_motorL_REV, 100);
+  digitalWrite(motorL_FWD, LOW);
+  ledcWrite(ch_motorR_REV, 100);
+  digitalWrite(motorR_FWD, LOW);
+}
+
+void lineForward(){
+  ledcWrite(ch_motorL_FWD, 100);
+  digitalWrite(motorL_REV, LOW);
+  ledcWrite(ch_motorR_FWD, 100);
+  digitalWrite(motorR_REV, LOW);
 }
