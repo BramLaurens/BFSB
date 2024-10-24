@@ -298,15 +298,15 @@ void remoteMotorcontrol(){
   if(RemoteXY.button_01 == 1){
     motorSpeedcontrolFWD(padxSpeed, padySpeed);
     if (millis() - FWD_Timer > 300){
-      forwardDir = true;
       FWD_Timer = millis();
+      forwardDir = true;
     }
   }
   else if(RemoteXY.button_02 == 1){
     motorSpeedcontrolREV(padxSpeed);
     if (millis() - FWD_Timer > 300){
-      forwardDir = false;
       FWD_Timer = millis();
+      forwardDir = false;
     }
   }
   else {
