@@ -102,7 +102,7 @@ Servo myservo;
 #define Strafpunt_Timeout 4000
 #define Ultrasoon_Measure_Delay 50
 #define Strafpunt_Drempelwaarde_cm 7
-#define Strafpunt_lowTime 500
+#define Strafpunt_lowTime 150
 
 NewPing sonar(Ultrasoon_Trig_Pin, Ultrasoon_Echo_Pin, MAX_DISTANCE);
 
@@ -275,7 +275,7 @@ void loop() {
   remoteMotorcontrol();
   servo();
   microswitch();
-  arena_border();
+  //arena_border();
   if(Score != lastScore){
     Display(Score);
   }
@@ -468,7 +468,7 @@ void arena_border(){
 
 void ultrasoon(){
   Serial.println(distance_cm);
-  if(distance_cm > Strafpunt_Drempelwaarde_cm){
+  if(distance_cm > Strafpunt_Drempelwaarde_cm || distance_cm == 0){
     Strafpunt_LowTimer = millis();
   }
 
