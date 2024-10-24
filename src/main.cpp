@@ -153,6 +153,7 @@ int maxSpeedR = 255;
 unsigned long FWD_Timer = 0;
 
 
+
 /*Servo Variables*/
 unsigned long Servo_Timer = 0;
 
@@ -175,6 +176,7 @@ int lastScore = 0;
 bool forwardDir = true;
 unsigned long lineCrossedtime = 0;
 unsigned long linecrossTimeout = 3000;
+
 
 CRemoteXY *remotexy;
 
@@ -278,11 +280,10 @@ void loop() {
     Display(Score);
   }
   lastScore = Score;
-
+  
   if(RemoteXY.button_04 == 1){
     digitalWrite(12, HIGH);
   }
-
 
   // Serial.print(distance_cm);
   // Serial.print("  ");
