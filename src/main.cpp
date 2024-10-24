@@ -150,7 +150,7 @@ float basespeedR = 150;
 int maxSpeedL = 255;
 int maxSpeedR = 255;
 
-
+unsigned long FWD_Timer = 0;
 
 
 /*Servo Variables*/
@@ -163,8 +163,8 @@ unsigned long Microswitch_Timer = 0;
 
 /*Ultrasoon Variables*/
 unsigned long Ultrasoon_Timer = 0;
-unsigned int Strafpunt_Timer = 0;
-unsigned int Strafpunt_LowTimer = 0;
+unsigned long Strafpunt_Timer = 0;
+unsigned long Strafpunt_LowTimer = 0;
 int distance_cm = 0; 
 
 /*Score variables*/
@@ -173,8 +173,8 @@ int lastScore = 0;
 
 /*CNY70 Variables*/
 bool forwardDir = true;
-unsigned int lineCrossedtime = 0;
-unsigned int linecrossTimeout = 3000;
+unsigned long lineCrossedtime = 0;
+unsigned long linecrossTimeout = 3000;
 
 CRemoteXY *remotexy;
 
@@ -297,16 +297,21 @@ void remoteMotorcontrol(){
 
   if(RemoteXY.button_01 == 1){
     motorSpeedcontrolFWD(padxSpeed, padySpeed);
-    forwardDir = true;
+    if (millis() - FWD_Timer > 300){
+      forwardDir = true;
+      FWD_Timer = millis();
+    }
   }
-  else{
-    if(RemoteXY.button_02 == 1){
-      motorSpeedcontrolREV(padxSpeed);
+  else if(RemoteXY.button_02 == 1){
+    motorSpeedcontrolREV(padxSpeed);
+    if (millis() - FWD_Timer > 300){
       forwardDir = false;
+      FWD_Timer = millis();
     }
-    else{
-      brake();
-    }
+  }
+  else {
+    brake();
+    FWD_Timer = millis();
   }
 }
 
