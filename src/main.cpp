@@ -229,12 +229,12 @@ void CNY70(){
 }
 
 void  Ultrasoonsensor(){
-  pinMode(23, OUTPUT);
-  pinMode(22, INPUT);
+  pinMode(26, OUTPUT);
+  pinMode(27, INPUT);
   Serial.println("\n\nTesting ultrasoon sensor:\n");
   Serial.println("Stap 1: \nSluit de Vcc aan op 3.3V en sluit de GND aan\n");
-  Serial.println("Stap 2: \nSluit de Trig_RX aan op pin 23\n");
-  Serial.println("Stap 3: \nSluit de Echo_TX aan op pin 22\n");
+  Serial.println("Stap 2: \nSluit de Trig_RX aan op pin 26\n");
+  Serial.println("Stap 3: \nSluit de Echo_TX aan op pin 27\n");
   Serial.println("Stap 4: \nAls je alles hebt aangesloten mag je de test beginnen\n");
   Serial.println("Straks wordt er 10X een afstand gemeten, jij moet kijken of de afstand klopt");
   Serial.println("Druk enter om te meten");
@@ -243,11 +243,11 @@ void  Ultrasoonsensor(){
   Serial.read();
 
   for (char i = 0; i < 10; i++){
-    digitalWrite(23, HIGH);
+    digitalWrite(26, HIGH);
     delayMicroseconds(1000);
-    digitalWrite(23, LOW);
+    digitalWrite(26, LOW);
 
-    duration_us = pulseIn(22, HIGH);
+    duration_us = pulseIn(27, HIGH);
     distance_cm = 0.017 * duration_us;
 
     Serial.print("distance: ");
@@ -350,7 +350,7 @@ void Motor(){
 void Servo(){
   ESP32PWM::allocateTimer(3);
   myservo.setPeriodHertz(50); 
-	myservo.attach(4, 500, 2500); 
+	myservo.attach(32, 500, 2500); 
   Serial.println("\n\nTesting van de servo:\n");
   Serial.println("Controleer of de servo goed is aangesloten:");
   Serial.println("De bruine draad moet op GND");
