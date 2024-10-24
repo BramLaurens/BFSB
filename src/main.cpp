@@ -59,7 +59,7 @@ struct {
 /////////////////////////////////////////////
 
 /*VEHICLE SPECIFIC DECLARATIONS*/
-float speedFactor = 0.4;
+float speedFactor = 0.8;
 int motorLoffset = 0;
 int motorRoffset = 0;
 
@@ -150,6 +150,7 @@ float basespeedR = 150;
 int maxSpeedL = 255;
 int maxSpeedR = 255;
 
+unsigned long FWD_Timer = 0;
 
 
 
@@ -163,8 +164,8 @@ unsigned long Microswitch_Timer = 0;
 
 /*Ultrasoon Variables*/
 unsigned long Ultrasoon_Timer = 0;
-unsigned int Strafpunt_Timer = 0;
-unsigned int Strafpunt_LowTimer = 0;
+unsigned long Strafpunt_Timer = 0;
+unsigned long Strafpunt_LowTimer = 0;
 int distance_cm = 0; 
 
 /*Score variables*/
@@ -173,8 +174,9 @@ int lastScore = 0;
 
 /*CNY70 Variables*/
 bool forwardDir = true;
-unsigned int lineCrossedtime = 0;
-unsigned int linecrossTimeout = 3000;
+unsigned long lineCrossedtime = 0;
+unsigned long linecrossTimeout = 3000;
+
 
 CRemoteXY *remotexy;
 
@@ -278,11 +280,10 @@ void loop() {
     Display(Score);
   }
   lastScore = Score;
-
+  
   if(RemoteXY.button_04 == 1){
     digitalWrite(12, HIGH);
   }
-
 
   // Serial.print(distance_cm);
   // Serial.print("  ");
@@ -297,16 +298,21 @@ void remoteMotorcontrol(){
 
   if(RemoteXY.button_01 == 1){
     motorSpeedcontrolFWD(padxSpeed, padySpeed);
-    forwardDir = true;
+    if (millis() - FWD_Timer > 300){
+      FWD_Timer = millis();
+      forwardDir = true;
+    }
   }
-  else{
-    if(RemoteXY.button_02 == 1){
-      motorSpeedcontrolREV(padxSpeed);
+  else if(RemoteXY.button_02 == 1){
+    motorSpeedcontrolREV(padxSpeed);
+    if (millis() - FWD_Timer > 300){
+      FWD_Timer = millis();
       forwardDir = false;
     }
-    else{
-      brake();
-    }
+  }
+  else {
+    brake();
+    FWD_Timer = millis();
   }
 }
 
@@ -421,12 +427,12 @@ void arena_border(){
     if(forwardDir == true){
       lineReverse();
       forwardDir = false;
-      delay(500);
+      delay(700);
     }
     else{
       lineForward();
       forwardDir = true;
-      delay(500);
+      delay(700);
     }
 
     while(millis()-lineCrossedtime < linecrossTimeout){
@@ -439,13 +445,13 @@ void arena_border(){
           forwardDir = false;
           brake();
           lineReverse();
-          delay(500);
+          delay(700);
         }
         else{
           forwardDir = true;
           brake();
           lineForward();
-          delay(500);
+          delay(700);
         }
       }
 
@@ -475,15 +481,15 @@ void ultrasoon(){
 }
 
 void lineReverse(){
-  ledcWrite(ch_motorL_REV, 45);
+  ledcWrite(ch_motorL_REV, 100);
   digitalWrite(motorL_FWD, LOW);
-  ledcWrite(ch_motorR_REV, 45);
+  ledcWrite(ch_motorR_REV, 100);
   digitalWrite(motorR_FWD, LOW);
 }
 
 void lineForward(){
-  ledcWrite(ch_motorL_FWD, 45);
+  ledcWrite(ch_motorL_FWD, 100);
   digitalWrite(motorL_REV, LOW);
-  ledcWrite(ch_motorR_FWD, 45);
+  ledcWrite(ch_motorR_FWD, 100);
   digitalWrite(motorR_REV, LOW);
 }
