@@ -102,7 +102,7 @@ Servo myservo;
 #define Strafpunt_Timeout 4000
 #define Ultrasoon_Measure_Delay 50
 #define Strafpunt_Drempelwaarde_cm 7
-#define Strafpunt_lowTime 150
+#define Strafpunt_lowTime 100
 
 NewPing sonar(Ultrasoon_Trig_Pin, Ultrasoon_Echo_Pin, MAX_DISTANCE);
 
@@ -260,6 +260,7 @@ void Task1code(void *pvParameters){
   for(;;){
     //Serial.print("RemoteXY handler running on core ");
     //Serial.println(xPortGetCoreID());
+    /*Een kleine delay omdat de watchdog anders de ESP crasht*/
     RemoteXY_delay(1);          
     remotexy->handler ();
 
