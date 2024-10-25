@@ -168,6 +168,7 @@ unsigned long Strafpunt_LowTimer = 0;
 int distance_cm = 0; 
 
 /*Score variables*/
+int Game_Timer = 5;
 int Score = 0;
 int lastScore = 0;
 
@@ -187,7 +188,7 @@ void setup(){
     &RemoteXY, 
     new CRemoteXYConnectionServer (
       new CRemoteXYComm_WiFiPoint (
-        "BFSB_ESP32_Bram",       // REMOTEXY_WIFI_SSID
+        "BFSB_ESP32_Matthias",       // REMOTEXY_WIFI_SSID
         "12345678"),        // REMOTEXY_WIFI_PASSWORD
       6377                  // REMOTEXY_SERVER_PORT
     )
@@ -269,11 +270,12 @@ void Task1code(void *pvParameters){
 }
 
 void loop() {
-  ultrasoon();
+  if (millis() >= (Game_Timer * 60000)){
+    ultrasoon();
   remoteMotorcontrol();
   servo();
   microswitch();
-  arena_border();
+  // arena_border();
   if(Score != lastScore){
     Display(Score);
   }
@@ -281,12 +283,17 @@ void loop() {
 
   if(RemoteXY.button_04 == 1){
     digitalWrite(12, HIGH);
+  } 
+  else {
+    //Toeter?
   }
+  
 
 
   // Serial.print(distance_cm);
   // Serial.print("  ");
   // Serial.println(Score);
+  }
 }
 
 void remoteMotorcontrol(){
@@ -466,7 +473,7 @@ void arena_border(){
 }
 
 void ultrasoon(){
-  Serial.println(distance_cm);
+  // Serial.println(distance_cm);
   if(distance_cm > Strafpunt_Drempelwaarde_cm){
     Strafpunt_LowTimer = millis();
   }
