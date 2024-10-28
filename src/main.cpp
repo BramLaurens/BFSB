@@ -111,6 +111,7 @@ NewPing sonar(Ultrasoon_Trig_Pin, Ultrasoon_Echo_Pin, MAX_DISTANCE);
 #define CNY70_Pin 34
 #define linecrossTimeout 2000
 
+#define toet_pin 12
 
 /*Display declarations*/
 //Vcc = 5V / 3.3V
@@ -190,7 +191,7 @@ void setup(){
     &RemoteXY, 
     new CRemoteXYConnectionServer (
       new CRemoteXYComm_WiFiPoint (
-        "BFSB_ESP32_Matthias",       // REMOTEXY_WIFI_SSID
+        "BFSB_ESP32_Bram",       // REMOTEXY_WIFI_SSID
         "12345678"),        // REMOTEXY_WIFI_PASSWORD
       6377                  // REMOTEXY_SERVER_PORT
     )
@@ -253,6 +254,8 @@ void setup(){
   pinMode(Ultrasoon_Trig_Pin, OUTPUT);
   pinMode(Ultrasoon_Echo_Pin, INPUT);
 
+  pinMode(toet_pin, OUTPUT);
+
   Display(Score);
   }
 
@@ -277,10 +280,17 @@ void loop() {
     remoteMotorcontrol();
     servo();
     microswitch();
-    arena_border();
+    ///arena_border();
     if(Score != lastScore){
       Display(Score);
       lastScore = Score;
+    }
+
+    if(RemoteXY.button_04 == 1){
+      digitalWrite(toet_pin, HIGH);
+    }
+    else{
+      digitalWrite(toet_pin, LOW);
     }
   
 
