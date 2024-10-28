@@ -189,7 +189,7 @@ void setup(){
     &RemoteXY, 
     new CRemoteXYConnectionServer (
       new CRemoteXYComm_WiFiPoint (
-        "BFSB_ESP32_Bram",       // REMOTEXY_WIFI_SSID
+        "BFSB_ESP32_Finn",       // REMOTEXY_WIFI_SSID
         "12345678"),        // REMOTEXY_WIFI_PASSWORD
       6377                  // REMOTEXY_SERVER_PORT
     )
