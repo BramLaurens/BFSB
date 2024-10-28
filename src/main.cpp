@@ -59,9 +59,9 @@ struct {
 /////////////////////////////////////////////
 
 /*VEHICLE SPECIFIC DECLARATIONS*/
-float speedFactor = 0.8;
+float speedFactor = 1;
 int motorLoffset = 0;
-int motorRoffset = 0;
+int motorRoffset = 20;
 
 /*Motor declarations*/
 #define motorL_FWD 4
