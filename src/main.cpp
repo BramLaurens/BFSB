@@ -260,6 +260,7 @@ void Task1code(void *pvParameters){
   for(;;){
     //Serial.print("RemoteXY handler running on core ");
     //Serial.println(xPortGetCoreID());
+    /*Een kleine delay omdat de watchdog anders de ESP crasht*/
     RemoteXY_delay(1);          
     remotexy->handler ();
 
