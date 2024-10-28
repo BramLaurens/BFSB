@@ -109,6 +109,7 @@ NewPing sonar(Ultrasoon_Trig_Pin, Ultrasoon_Echo_Pin, MAX_DISTANCE);
 /*CNY70 declarations*/
 #define Drempelwaarde_CNY70 200
 #define CNY70_Pin 34
+#define linecrossTimeout 2000
 
 
 /*Display declarations*/
@@ -176,7 +177,6 @@ int lastScore = 0;
 /*CNY70 Variables*/
 bool forwardDir = true;
 unsigned long lineCrossedtime = 0;
-unsigned long linecrossTimeout = 2000;
 
 
 CRemoteXY *remotexy;
@@ -273,19 +273,19 @@ void Task1code(void *pvParameters){
 void loop() {
   if (millis() <= (Game_Timer * 60000)){
     ultrasoon();
-  remoteMotorcontrol();
-  servo();
-  microswitch();
-  // arena_border();
-  if(Score != lastScore){
-    Display(Score);
-    lastScore = Score;
-  }
+    remoteMotorcontrol();
+    servo();
+    microswitch();
+    arena_border();
+    if(Score != lastScore){
+      Display(Score);
+      lastScore = Score;
+    }
   
 
-  // Serial.print(distance_cm);
-  // Serial.print("  ");
-  // Serial.println(Score);
+    // Serial.print(distance_cm);
+    // Serial.print("  ");
+    // Serial.println(Score);
   }
   else {
     //Toeter?
@@ -348,9 +348,9 @@ void motorSpeedlimiter(){
 void forward(){
   motorSpeedlimiter();
   
-  Serial.print(speedL);
-  Serial.print("  ");
-  Serial.println(speedR);
+  // Serial.print(speedL);
+  // Serial.print("  ");
+  // Serial.println(speedR);
   ledcWrite(ch_motorL_FWD, speedL);
   digitalWrite(motorL_REV, LOW);
   ledcWrite(ch_motorR_FWD, speedR);
