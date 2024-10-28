@@ -99,16 +99,17 @@ Servo myservo;
 #define Strafpunt 3
 #define Ultrasoon_Trig_Pin 26
 #define Ultrasoon_Echo_Pin 27
-#define Strafpunt_Timeout 4000
+#define Strafpunt_Timeout 1500
 #define Ultrasoon_Measure_Delay 50
 #define Strafpunt_Drempelwaarde_cm 7
-#define Strafpunt_lowTime 100
+#define Strafpunt_lowTime 50
 
 NewPing sonar(Ultrasoon_Trig_Pin, Ultrasoon_Echo_Pin, MAX_DISTANCE);
 
 /*CNY70 declarations*/
 #define Drempelwaarde_CNY70 200
 #define CNY70_Pin 34
+#define linecrossTimeout 2000
 
 
 /*Display declarations*/
@@ -169,13 +170,13 @@ unsigned long Strafpunt_LowTimer = 0;
 int distance_cm = 0; 
 
 /*Score variables*/
+int Game_Timer = 5;
 int Score = 0;
 int lastScore = 0;
 
 /*CNY70 Variables*/
 bool forwardDir = true;
 unsigned long lineCrossedtime = 0;
-unsigned long linecrossTimeout = 3000;
 
 
 CRemoteXY *remotexy;
@@ -189,7 +190,7 @@ void setup(){
     &RemoteXY, 
     new CRemoteXYConnectionServer (
       new CRemoteXYComm_WiFiPoint (
-        "BFSB_ESP32_Bram",       // REMOTEXY_WIFI_SSID
+        "BFSB_ESP32_Matthias",       // REMOTEXY_WIFI_SSID
         "12345678"),        // REMOTEXY_WIFI_PASSWORD
       6377                  // REMOTEXY_SERVER_PORT
     )
@@ -251,10 +252,9 @@ void setup(){
   //Ultrasoon
   pinMode(Ultrasoon_Trig_Pin, OUTPUT);
   pinMode(Ultrasoon_Echo_Pin, INPUT);
-  Display(Score);
 
-  pinMode(12, OUTPUT);
-}
+  Display(Score);
+  }
 
 void Task1code(void *pvParameters){
   for(;;){
@@ -272,23 +272,25 @@ void Task1code(void *pvParameters){
 }
 
 void loop() {
-  ultrasoon();
-  remoteMotorcontrol();
-  servo();
-  microswitch();
-  //arena_border();
-  if(Score != lastScore){
-    Display(Score);
-  }
-  lastScore = Score;
+  if (millis() <= (Game_Timer * 60000)){
+    ultrasoon();
+    remoteMotorcontrol();
+    servo();
+    microswitch();
+    arena_border();
+    if(Score != lastScore){
+      Display(Score);
+      lastScore = Score;
+    }
   
-  if(RemoteXY.button_04 == 1){
-    digitalWrite(12, HIGH);
-  }
 
-  // Serial.print(distance_cm);
-  // Serial.print("  ");
-  // Serial.println(Score);
+    // Serial.print(distance_cm);
+    // Serial.print("  ");
+    // Serial.println(Score);
+  }
+  else {
+    //Toeter?
+  }
 }
 
 void remoteMotorcontrol(){
@@ -347,9 +349,9 @@ void motorSpeedlimiter(){
 void forward(){
   motorSpeedlimiter();
   
-  Serial.print(speedL);
-  Serial.print("  ");
-  Serial.println(speedR);
+  // Serial.print(speedL);
+  // Serial.print("  ");
+  // Serial.println(speedR);
   ledcWrite(ch_motorL_FWD, speedL);
   digitalWrite(motorL_REV, LOW);
   ledcWrite(ch_motorR_FWD, speedR);
@@ -468,7 +470,7 @@ void arena_border(){
 }
 
 void ultrasoon(){
-  Serial.println(distance_cm);
+  // Serial.println(distance_cm);
   if(distance_cm > Strafpunt_Drempelwaarde_cm || distance_cm == 0){
     Strafpunt_LowTimer = millis();
   }
