@@ -62,6 +62,10 @@ struct {
 float speedFactor = 0.8;
 int motorLoffset = 0;
 int motorRoffset = 0;
+int TelopV = 0;
+int TelopA = 0;
+int hasrunForward = 0;
+int hasrunReverse = 0;
 
 /*Motor declarations*/
 #define motorL_FWD 4
@@ -175,7 +179,7 @@ int lastScore = 0;
 /*CNY70 Variables*/
 bool forwardDir = true;
 unsigned long lineCrossedtime = 0;
-unsigned long linecrossTimeout = 3000;
+unsigned long linecrossTimeout = 1000;
 
 
 CRemoteXY *remotexy;
@@ -276,11 +280,12 @@ void loop() {
   remoteMotorcontrol();
   servo();
   microswitch();
-  //arena_border();
+  arena_border();
   if(Score != lastScore){
     Display(Score);
+    lastScore = Score;
   }
-  lastScore = Score;
+  
   
   if(RemoteXY.button_04 == 1){
     digitalWrite(12, HIGH);
@@ -299,14 +304,24 @@ void remoteMotorcontrol(){
 
   if(RemoteXY.button_01 == 1){
     motorSpeedcontrolFWD(padxSpeed, padySpeed);
-    if (millis() - FWD_Timer > 300){
+    hasrunForward++;
+    TelopA = 0;
+    if(hasrunForward == 1){
+      TelopV++;
+    }
+    if (millis() - FWD_Timer > 300 || TelopV >= 3){
       FWD_Timer = millis();
       forwardDir = true;
     }
   }
   else if(RemoteXY.button_02 == 1){
     motorSpeedcontrolREV(padxSpeed);
-    if (millis() - FWD_Timer > 300){
+    TelopV = 0;
+    hasrunReverse++;
+    if(hasrunReverse == 1){
+      TelopA++;
+    }
+    if (millis() - FWD_Timer > 300 || TelopA >= 3){
       FWD_Timer = millis();
       forwardDir = false;
     }
@@ -315,7 +330,15 @@ void remoteMotorcontrol(){
     brake();
     FWD_Timer = millis();
   }
-}
+    if(RemoteXY.button_01 == 0){
+    hasrunForward = 0;
+    }
+    if(RemoteXY.button_02 == 0){
+    hasrunReverse = 0;
+    }
+   Serial.println(TelopA);
+  }
+  
 
 void motorSpeedcontrolFWD(float padSpeed, float padySpeed){
   speedL = speedFactor*(basespeedL + motorLoffset + padySpeed + padSpeed);
@@ -347,9 +370,9 @@ void motorSpeedlimiter(){
 void forward(){
   motorSpeedlimiter();
   
-  Serial.print(speedL);
-  Serial.print("  ");
-  Serial.println(speedR);
+  // Serial.print(speedL);
+  // Serial.print("  ");
+  // Serial.println(speedR);
   ledcWrite(ch_motorL_FWD, speedL);
   digitalWrite(motorL_REV, LOW);
   ledcWrite(ch_motorR_FWD, speedR);
@@ -463,12 +486,11 @@ void arena_border(){
         lineReverse();
       }
     }
-    
   }
 }
 
 void ultrasoon(){
-  Serial.println(distance_cm);
+  // Serial.println(distance_cm);
   if(distance_cm > Strafpunt_Drempelwaarde_cm || distance_cm == 0){
     Strafpunt_LowTimer = millis();
   }
