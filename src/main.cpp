@@ -62,6 +62,10 @@ struct {
 float speedFactor = 0.8;
 int motorLoffset = 0;
 int motorRoffset = 0;
+int TelopV = 0;
+int TelopA = 0;
+unsigned long hasrunForward = 0;
+unsigned long hasrunReverse = 0;
 
 /*Motor declarations*/
 #define motorL_FWD 4
@@ -191,7 +195,7 @@ void setup(){
     &RemoteXY, 
     new CRemoteXYConnectionServer (
       new CRemoteXYComm_WiFiPoint (
-        "BFSB_ESP32_Bram",       // REMOTEXY_WIFI_SSID
+        "BFSB_ESP32_Daan",       // REMOTEXY_WIFI_SSID
         "12345678"),        // REMOTEXY_WIFI_PASSWORD
       6377                  // REMOTEXY_SERVER_PORT
     )
@@ -280,7 +284,7 @@ void loop() {
     remoteMotorcontrol();
     servo();
     microswitch();
-    ///arena_border();
+    arena_border();
     if(Score != lastScore){
       Display(Score);
       lastScore = Score;
@@ -311,14 +315,24 @@ void remoteMotorcontrol(){
 
   if(RemoteXY.button_01 == 1){
     motorSpeedcontrolFWD(padxSpeed, padySpeed);
-    if (millis() - FWD_Timer > 300){
+    hasrunForward++;
+    TelopA = 0;
+    if(hasrunForward == 1){
+      TelopV++;
+    }
+    if (millis() - FWD_Timer > 300 || TelopV >= 3){
       FWD_Timer = millis();
       forwardDir = true;
     }
   }
   else if(RemoteXY.button_02 == 1){
     motorSpeedcontrolREV(padxSpeed);
-    if (millis() - FWD_Timer > 300){
+    TelopV = 0;
+    hasrunReverse++;
+    if(hasrunReverse == 1){
+      TelopA++;
+    }
+    if (millis() - FWD_Timer > 300 || TelopA >= 3){
       FWD_Timer = millis();
       forwardDir = false;
     }
@@ -327,7 +341,18 @@ void remoteMotorcontrol(){
     brake();
     FWD_Timer = millis();
   }
-}
+
+  if(RemoteXY.button_01 == 0){
+    hasrunForward = 0;
+  }
+
+  if(RemoteXY.button_02 == 0){
+    hasrunReverse = 0;
+  }
+
+  Serial.println(TelopA);
+  }
+  
 
 void motorSpeedcontrolFWD(float padSpeed, float padySpeed){
   speedL = speedFactor*(basespeedL + motorLoffset + padySpeed + padSpeed);
@@ -475,7 +500,6 @@ void arena_border(){
         lineReverse();
       }
     }
-    
   }
 }
 
