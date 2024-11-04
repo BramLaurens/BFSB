@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include <esp_now.h>
 #include <WiFi.h>
 #include <RemoteXY.h>
 #include <ESP32Servo.h>
@@ -6,6 +7,30 @@
 #include <Adafruit_GFX.h>
 #include <Adafruit_SSD1306.h>
 #include <NewPing.h>
+/////////////////////////////ESPnow Init///////////////////////////////////
+
+void ESPnowdebug();
+
+uint8_t receiverAdd[] = {0xE4, 0x65, 0xB8, 0x0D, 0x15, 0x58};
+esp_now_peer_info_t peerInfo;
+
+int data=12;
+int ESPnowTimer = 0;
+String sta;
+
+
+void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
+  if(status == ESP_NOW_SEND_SUCCESS) {
+    sta = "Delivery Success";
+  }
+  else{
+    sta = "Delivery Fail";
+  }
+    
+  ESPnowdebug();
+  Serial.println(sta);
+}
+/////////////////////////////Task 0 Init///////////////////////////////////
 
 TaskHandle_t Task1;
 
@@ -201,6 +226,16 @@ void setup(){
     )
   );
 
+  //ESPnow Init 2
+  WiFi.mode(WIFI_MODE_APSTA);
+  esp_now_init();
+  esp_now_register_send_cb(OnDataSent);
+
+  memcpy(peerInfo.peer_addr, receiverAdd, 6);
+  peerInfo.channel = 0;  
+  peerInfo.encrypt = false;
+  esp_now_add_peer(&peerInfo);
+
   //Create task on core 0 for RemoteXY handler
   xTaskCreatePinnedToCore(
     Task1code,
@@ -243,8 +278,8 @@ void setup(){
 	myservo.attach(Servo_Pin, 500, 2500); 
   myservo.write(Servo_Min_Degrees);
 
-  Serial.print("setup() running on core ");
-  Serial.println(xPortGetCoreID());  
+  //Serial.print("setup() running on core ");
+  //Serial.println(xPortGetCoreID());  
 
 
   //Microswitch
@@ -279,12 +314,20 @@ void Task1code(void *pvParameters){
 }
 
 void loop() {
+  if(millis() - ESPnowTimer > 1000){
+    ESPnowTimer = millis();
+    data++;
+    Serial.println(esp_now_send(receiverAdd, (uint8_t *) &data, sizeof(data)));
+  }
+ 
+  
+  
   if (millis() <= (Game_Timer * 60000)){
     ultrasoon();
     remoteMotorcontrol();
     servo();
     microswitch();
-    arena_border();
+    //arena_border();
     if(Score != lastScore){
       Display(Score);
       lastScore = Score;
@@ -305,6 +348,7 @@ void loop() {
   else {
     //Toeter?
   }
+  
 }
 
 void remoteMotorcontrol(){
@@ -350,7 +394,6 @@ void remoteMotorcontrol(){
     hasrunReverse = 0;
   }
 
-  Serial.println(TelopA);
   }
   
 
@@ -529,4 +572,12 @@ void lineForward(){
   digitalWrite(motorL_REV, LOW);
   ledcWrite(ch_motorR_FWD, 100);
   digitalWrite(motorR_REV, LOW);
+}
+
+void ESPnowdebug(){
+  display.clearDisplay();
+  display.setCursor(15, 0);
+  display.setTextSize(1);
+  display.println(sta); //invoer wat wordt uitgebeeld op display
+  display.display(); 
 }
