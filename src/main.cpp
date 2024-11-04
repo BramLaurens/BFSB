@@ -182,7 +182,6 @@ int lastScore = 0;
 /*CNY70 Variables*/
 bool forwardDir = true;
 unsigned long lineCrossedtime = 0;
-unsigned long linecrossTimeout = 3000;
 
 
 CRemoteXY *remotexy;
@@ -286,7 +285,6 @@ void loop() {
     servo();
     microswitch();
     arena_border();
-
     if(Score != lastScore){
       Display(Score);
       lastScore = Score;
