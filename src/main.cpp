@@ -64,8 +64,8 @@ int motorLoffset = 0;
 int motorRoffset = 0;
 int TelopV = 0;
 int TelopA = 0;
-int hasrunForward = 0;
-int hasrunReverse = 0;
+unsigned long hasrunForward = 0;
+unsigned long hasrunReverse = 0;
 
 /*Motor declarations*/
 #define motorL_FWD 4
@@ -330,13 +330,16 @@ void remoteMotorcontrol(){
     brake();
     FWD_Timer = millis();
   }
-    if(RemoteXY.button_01 == 0){
+
+  if(RemoteXY.button_01 == 0){
     hasrunForward = 0;
-    }
-    if(RemoteXY.button_02 == 0){
+  }
+
+  if(RemoteXY.button_02 == 0){
     hasrunReverse = 0;
-    }
-   Serial.println(TelopA);
+  }
+
+  Serial.println(TelopA);
   }
   
 
