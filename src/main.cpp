@@ -103,17 +103,19 @@ Servo myservo;
 #define Strafpunt 3
 #define Ultrasoon_Trig_Pin 26
 #define Ultrasoon_Echo_Pin 27
-#define Strafpunt_Timeout 4000
+#define Strafpunt_Timeout 1500
 #define Ultrasoon_Measure_Delay 50
 #define Strafpunt_Drempelwaarde_cm 7
-#define Strafpunt_lowTime 100
+#define Strafpunt_lowTime 50
 
 NewPing sonar(Ultrasoon_Trig_Pin, Ultrasoon_Echo_Pin, MAX_DISTANCE);
 
 /*CNY70 declarations*/
 #define Drempelwaarde_CNY70 200
 #define CNY70_Pin 34
+#define linecrossTimeout 2000
 
+#define toet_pin 12
 
 /*Display declarations*/
 //Vcc = 5V / 3.3V
@@ -173,13 +175,14 @@ unsigned long Strafpunt_LowTimer = 0;
 int distance_cm = 0; 
 
 /*Score variables*/
+int Game_Timer = 5;
 int Score = 0;
 int lastScore = 0;
 
 /*CNY70 Variables*/
 bool forwardDir = true;
 unsigned long lineCrossedtime = 0;
-unsigned long linecrossTimeout = 1000;
+unsigned long linecrossTimeout = 3000;
 
 
 CRemoteXY *remotexy;
@@ -255,10 +258,11 @@ void setup(){
   //Ultrasoon
   pinMode(Ultrasoon_Trig_Pin, OUTPUT);
   pinMode(Ultrasoon_Echo_Pin, INPUT);
-  Display(Score);
 
-  pinMode(12, OUTPUT);
-}
+  pinMode(toet_pin, OUTPUT);
+
+  Display(Score);
+  }
 
 void Task1code(void *pvParameters){
   for(;;){
@@ -276,24 +280,33 @@ void Task1code(void *pvParameters){
 }
 
 void loop() {
-  ultrasoon();
-  remoteMotorcontrol();
-  servo();
-  microswitch();
-  arena_border();
-  if(Score != lastScore){
-    Display(Score);
-    lastScore = Score;
-  }
-  
-  
-  if(RemoteXY.button_04 == 1){
-    digitalWrite(12, HIGH);
-  }
+  if (millis() <= (Game_Timer * 60000)){
+    ultrasoon();
+    remoteMotorcontrol();
+    servo();
+    microswitch();
+    arena_border();
 
-  // Serial.print(distance_cm);
-  // Serial.print("  ");
-  // Serial.println(Score);
+    if(Score != lastScore){
+      Display(Score);
+      lastScore = Score;
+    }
+
+    if(RemoteXY.button_04 == 1){
+      digitalWrite(toet_pin, HIGH);
+    }
+    else{
+      digitalWrite(toet_pin, LOW);
+    }
+  
+
+    // Serial.print(distance_cm);
+    // Serial.print("  ");
+    // Serial.println(Score);
+  }
+  else {
+    //Toeter?
+  }
 }
 
 void remoteMotorcontrol(){
