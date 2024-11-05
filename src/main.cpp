@@ -619,6 +619,7 @@ void ESPnowdebug(){
 }
 
 void EOG(){
+  brake();
   display.clearDisplay();
   //display.fillScreen(63488);
   display.setCursor(15, 0);
