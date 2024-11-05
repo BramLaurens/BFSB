@@ -11,7 +11,7 @@
 
 void ESPnowdebug();
 
-uint16_t vehicleID = 2;
+uint16_t vehicleID = 4;
 
 uint8_t receiverAdd[] = {0xE4, 0x65, 0xB8, 0x0D, 0x15, 0x58};
 esp_now_peer_info_t peerInfo;
@@ -249,7 +249,7 @@ void setup(){
     &RemoteXY, 
     new CRemoteXYConnectionServer (
       new CRemoteXYComm_WiFiPoint (
-        "BFSB_ESP32_Bram",       // REMOTEXY_WIFI_SSID
+        "BFSB_ESP32_Finn",       // REMOTEXY_WIFI_SSID
         "12345678"),        // REMOTEXY_WIFI_PASSWORD
       6377                  // REMOTEXY_SERVER_PORT
     )
