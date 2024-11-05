@@ -11,7 +11,7 @@
 
 void ESPnowdebug();
 
-uint16_t vehicleID = 1;
+uint16_t vehicleID = 2;
 
 uint8_t receiverAdd[] = {0xE4, 0x65, 0xB8, 0x0D, 0x15, 0x58};
 esp_now_peer_info_t peerInfo;
@@ -38,7 +38,7 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
 
 void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
   memcpy(&gameFlag, incomingData, sizeof(gameFlag));
-  ESPnowdebug();
+  //ESPnowdebug();
 }
 /////////////////////////////Task 0 Init///////////////////////////////////
 
@@ -175,6 +175,8 @@ void arena_border();
 void ultrasoon();
 void lineReverse();
 void lineForward();
+void EOG();
+void SOG();
 
 /*Motor Variables*/
 float pad_xAxis = 0;
@@ -218,6 +220,8 @@ int lastScore = 0;
 bool forwardDir = true;
 unsigned long lineCrossedtime = 0;
 
+bool EOGroutineDone = false;
+bool SOGroutineDone = false;
 
 CRemoteXY *remotexy;
 
@@ -341,9 +345,14 @@ void Task1code(void *pvParameters){
 }
 
 void loop() {
-  sendScore();
-
+  
   if(gameFlag == 1){
+    if(SOGroutineDone == false){
+      SOG();
+      SOGroutineDone = true;
+    }
+    EOGroutineDone = false;
+    sendScore();
     ultrasoon();
     remoteMotorcontrol();
     servo();
@@ -365,6 +374,13 @@ void loop() {
     // Serial.print(distance_cm);
     // Serial.print("  ");
     // Serial.println(Score);
+  }
+  else{
+    SOGroutineDone = false;
+    if(EOGroutineDone == false){
+      EOG();
+      EOGroutineDone = true;
+    }
   }
 }
 
@@ -597,4 +613,17 @@ void ESPnowdebug(){
   display.setTextSize(1);
   display.println(gameFlag); //invoer wat wordt uitgebeeld op display
   display.display(); 
+}
+
+void EOG(){
+  display.clearDisplay();
+  //display.fillScreen(63488);
+  display.setCursor(15, 0);
+  display.setTextSize(2);
+  display.println("Game Over"); //invoer wat wordt uitgebeeld op display
+  display.display(); 
+}
+
+void SOG(){
+  Display(Score);
 }
