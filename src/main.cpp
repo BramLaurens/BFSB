@@ -226,7 +226,7 @@ bool SOGroutineDone = false;
 CRemoteXY *remotexy;
 
 void sendScore(){
-  if(millis() - ESPnowTimer > 1000){
+  if(millis() - ESPnowTimer > 1004){
     encodedScore[1] = abs(Score);
 
     if(Score < 0){
@@ -360,7 +360,7 @@ void loop() {
     remoteMotorcontrol();
     servo();
     microswitch();
-    //arena_border();
+    arena_border();
     if(Score != lastScore){
       Display(Score);
       lastScore = Score;
