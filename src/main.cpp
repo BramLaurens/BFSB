@@ -11,7 +11,7 @@
 
 void ESPnowdebug();
 
-uint16_t vehicleID = 2;
+uint16_t vehicleID = 1;
 
 uint8_t receiverAdd[] = {0xE4, 0x65, 0xB8, 0x0D, 0x15, 0x58};
 esp_now_peer_info_t peerInfo;
@@ -20,6 +20,7 @@ int data=12;
 
 uint16_t encodedScore[] = {vehicleID, 0, 0};
 int ESPnowTimer = 0;
+uint8_t gameFlag = 0;
 String sta;
 
 
@@ -31,8 +32,13 @@ void OnDataSent(const uint8_t *mac_addr, esp_now_send_status_t status) {
     sta = "Delivery Fail";
   }
     
-  ESPnowdebug();
+  //ESPnowdebug();
   Serial.println(sta);
+}
+
+void OnDataRecv(const uint8_t * mac, const uint8_t *incomingData, int len) {
+  memcpy(&gameFlag, incomingData, sizeof(gameFlag));
+  ESPnowdebug();
 }
 /////////////////////////////Task 0 Init///////////////////////////////////
 
@@ -215,6 +221,21 @@ unsigned long lineCrossedtime = 0;
 
 CRemoteXY *remotexy;
 
+void sendScore(){
+  if(millis() - ESPnowTimer > 1000){
+    encodedScore[1] = abs(Score);
+
+    if(Score < 0){
+      encodedScore[2] = 1;
+    }
+    else{
+      encodedScore[2] = 0;
+    }
+    Serial.println(esp_now_send(receiverAdd, (uint8_t*) &encodedScore, sizeof(encodedScore)));
+    ESPnowTimer = millis();
+  }
+}
+
 void setup(){
   Serial.begin(115200);
 
@@ -234,6 +255,7 @@ void setup(){
   WiFi.mode(WIFI_MODE_APSTA);
   esp_now_init();
   esp_now_register_send_cb(OnDataSent);
+  esp_now_register_recv_cb(OnDataRecv);
 
   memcpy(peerInfo.peer_addr, receiverAdd, 6);
   peerInfo.channel = 0;  
@@ -319,24 +341,9 @@ void Task1code(void *pvParameters){
 }
 
 void loop() {
-  if(millis() - ESPnowTimer > 1000){
-    encodedScore[1] = abs(Score);
+  sendScore();
 
-    if(Score < 0){
-      encodedScore[2] = 1;
-    }
-    else{
-      encodedScore[2] = 0;
-    }
-    Serial.println(esp_now_send(receiverAdd, (uint8_t*) &encodedScore, sizeof(encodedScore)));
-    ESPnowTimer = millis();
-  }
-
-  
- 
-  
-  
-  if (millis() <= (Game_Timer * 60000)){
+  if(gameFlag == 1){
     ultrasoon();
     remoteMotorcontrol();
     servo();
@@ -359,10 +366,6 @@ void loop() {
     // Serial.print("  ");
     // Serial.println(Score);
   }
-  else {
-    //Toeter?
-  }
-  
 }
 
 void remoteMotorcontrol(){
@@ -592,6 +595,6 @@ void ESPnowdebug(){
   display.clearDisplay();
   display.setCursor(15, 0);
   display.setTextSize(1);
-  display.println(sta); //invoer wat wordt uitgebeeld op display
+  display.println(gameFlag); //invoer wat wordt uitgebeeld op display
   display.display(); 
 }
