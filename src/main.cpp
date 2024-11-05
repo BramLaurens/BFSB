@@ -11,10 +11,14 @@
 
 void ESPnowdebug();
 
+uint16_t vehicleID = 2;
+
 uint8_t receiverAdd[] = {0xE4, 0x65, 0xB8, 0x0D, 0x15, 0x58};
 esp_now_peer_info_t peerInfo;
 
 int data=12;
+
+uint16_t encodedScore[] = {vehicleID, 0, 0};
 int ESPnowTimer = 0;
 String sta;
 
@@ -295,6 +299,7 @@ void setup(){
 
   pinMode(toet_pin, OUTPUT);
 
+  Serial.println(String(WiFi.macAddress()));
   Display(Score);
   }
 
@@ -315,10 +320,19 @@ void Task1code(void *pvParameters){
 
 void loop() {
   if(millis() - ESPnowTimer > 1000){
+    encodedScore[1] = abs(Score);
+
+    if(Score < 0){
+      encodedScore[2] = 1;
+    }
+    else{
+      encodedScore[2] = 0;
+    }
+    Serial.println(esp_now_send(receiverAdd, (uint8_t*) &encodedScore, sizeof(encodedScore)));
     ESPnowTimer = millis();
-    data++;
-    Serial.println(esp_now_send(receiverAdd, (uint8_t *) &data, sizeof(data)));
   }
+
+  
  
   
   
@@ -482,7 +496,7 @@ void servo(){
 
 void microswitch(){
   if (digitalRead(Microswitch_Pin) == LOW && (millis() - Microswitch_Timer) > Microswitch_Timeout){
-    Score++;
+    Score = Score + 127;
     // Serial.println(Score);
     Microswitch_Timer = millis();
   } 
