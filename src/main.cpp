@@ -94,8 +94,8 @@ struct {
 /////////////////////////////////////////////
 
 /*VEHICLE SPECIFIC DECLARATIONS*/
-float speedFactor = 0.8;
-int motorLoffset = 0;
+float speedFactor = 0.5;
+int motorLoffset = 10;
 int motorRoffset = 0;
 int TelopV = 0;
 int TelopA = 0;
@@ -106,7 +106,7 @@ unsigned long hasrunReverse = 0;
 #define motorL_FWD 4
 #define motorL_REV 0
 #define motorR_FWD 2
-#define motorR_REV 15
+#define motorR_REV 16
 
 #define ch_motorL_FWD 0
 #define ch_motorL_REV 1
@@ -119,8 +119,8 @@ unsigned long hasrunReverse = 0;
 
 /*Servo declarations*/
 #define Servo_Pin 32
-#define Servo_Max_Degrees 90
-#define Servo_Min_Degrees 0
+#define Servo_Max_Degrees 180
+#define Servo_Min_Degrees 90
 #define Servo_Lowtime 500
 #define Servo_Timeout 1000
 Servo myservo;
@@ -226,7 +226,7 @@ bool SOGroutineDone = false;
 CRemoteXY *remotexy;
 
 void sendScore(){
-  if(millis() - ESPnowTimer > 1000){
+  if(millis() - ESPnowTimer > 998){
     encodedScore[1] = abs(Score);
 
     if(Score < 0){
@@ -360,7 +360,7 @@ void loop() {
     remoteMotorcontrol();
     servo();
     microswitch();
-    //arena_border();
+    arena_border();
     if(Score != lastScore){
       Display(Score);
       lastScore = Score;
