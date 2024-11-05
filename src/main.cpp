@@ -515,7 +515,7 @@ void servo(){
 
 void microswitch(){
   if (digitalRead(Microswitch_Pin) == LOW && (millis() - Microswitch_Timer) > Microswitch_Timeout){
-    Score = Score + 127;
+    Score = Score + 1;
     // Serial.println(Score);
     Microswitch_Timer = millis();
   } 
