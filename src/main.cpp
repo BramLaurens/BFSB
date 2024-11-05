@@ -345,6 +345,10 @@ void Task1code(void *pvParameters){
 }
 
 void loop() {
+
+  if(gameFlag == 2){
+    SOGroutineDone = false;
+  }
   
   if(gameFlag == 1){
     if(SOGroutineDone == false){
