@@ -94,7 +94,7 @@ struct {
 /////////////////////////////////////////////
 
 /*VEHICLE SPECIFIC DECLARATIONS*/
-float speedFactor = 0.8;
+float speedFactor = 0.4;
 int motorLoffset = 0;
 int motorRoffset = 0;
 int TelopV = 0;
@@ -630,5 +630,6 @@ void EOG(){
 }
 
 void SOG(){
+  Score = 0;
   Display(Score);
 }
