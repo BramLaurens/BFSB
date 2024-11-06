@@ -183,7 +183,7 @@ float pad_xAxis = 0;
 float pad_yAxis = 0;
 float padxSpeed = 0;
 float padySpeed = 0;
-float padFactor = 0.8;
+float padFactor = 0.6;
 float padYfactor = 0.5;
 
 float speedL = 0;
