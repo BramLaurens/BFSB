@@ -188,8 +188,8 @@ float padYfactor = 0.5;
 
 float speedL = 0;
 float speedR = 0;
-float basespeedL = 150;
-float basespeedR = 150;
+float basespeedL = 130;
+float basespeedR = 130;
 int maxSpeedL = 255;
 int maxSpeedR = 255;
 
@@ -597,16 +597,16 @@ void ultrasoon(){
 }
 
 void lineReverse(){
-  ledcWrite(ch_motorL_REV, 100);
+  ledcWrite(ch_motorL_REV, 70);
   digitalWrite(motorL_FWD, LOW);
-  ledcWrite(ch_motorR_REV, 100);
+  ledcWrite(ch_motorR_REV, 70);
   digitalWrite(motorR_FWD, LOW);
 }
 
 void lineForward(){
-  ledcWrite(ch_motorL_FWD, 100);
+  ledcWrite(ch_motorL_FWD, 70);
   digitalWrite(motorL_REV, LOW);
-  ledcWrite(ch_motorR_FWD, 100);
+  ledcWrite(ch_motorR_FWD, 70);
   digitalWrite(motorR_REV, LOW);
 }
 
