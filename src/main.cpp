@@ -94,7 +94,7 @@ struct {
 /////////////////////////////////////////////
 
 /*VEHICLE SPECIFIC DECLARATIONS*/
-float speedFactor = 0.5;
+float speedFactor = 0.8;
 int motorLoffset = 10;
 int motorRoffset = 0;
 int TelopV = 0;
@@ -188,8 +188,8 @@ float padYfactor = 0.5;
 
 float speedL = 0;
 float speedR = 0;
-float basespeedL = 130;
-float basespeedR = 130;
+float basespeedL = 140;
+float basespeedR = 140;
 int maxSpeedL = 255;
 int maxSpeedR = 255;
 
@@ -360,7 +360,7 @@ void loop() {
     remoteMotorcontrol();
     servo();
     microswitch();
-    arena_border();
+    //arena_border();
     if(Score != lastScore){
       Display(Score);
       lastScore = Score;
