@@ -360,7 +360,7 @@ void loop() {
     remoteMotorcontrol();
     servo();
     microswitch();
-    arena_border();
+    //arena_border();
     if(Score != lastScore){
       Display(Score);
       lastScore = Score;
